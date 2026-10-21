@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>Kahoot Hijack</title>
+<title>Kahoot Hijack v2</title>
 <style>
 :root{
   --blue:#007AFF; --green:#34C759; --red:#FF3B30; --orange:#FF9500; --purple:#AF52DE;
@@ -293,7 +293,6 @@ function b64dec(s){
   while(t.length%4) t+='=';
   try{ const d=atob(t); return /^[\x00-\x7f]+$/.test(d)?d:null; }catch(e){ return null; }
 }
-/* kahoot's own recipe: token[i] = header[i] ^ challenge[i % challenge.length] */
 function xorTokens(headerToken, challengeToken){
   if(!headerToken||!challengeToken) return null;
   let out='';
@@ -310,7 +309,6 @@ function extractChallenge(t){
   if(!ch){ const m=t.match(/decode\.call\(this[\s\S]*/); if(m) ch=m[0]; }
   return ch;
 }
-/* full shim — isArray/isString/isDate all present, or the eval throws */
 function shims(){
   const lodash=new Proxy({ replace:(s,re,fn)=>String(s).replace(re,fn) },
     { get(t,k){ if(k in t) return t[k]; if(typeof k==='symbol') return undefined; return (...a)=>a[0]; } });
@@ -349,21 +347,18 @@ function decoders(ch){
   return out;
 }
 
-/* ===================== session fetch (needs body AND header) ===================== */
+/* ===================== session fetch (working proxies) ===================== */
 const R='https://kahoot.it/reserve/session/';
 const PROXIES=[
-  { n:'cors.lol',   t:11000, b:u=>'https://api.cors.lol/?url='+enc(u) },
-  { n:'cors.eu.org',t:11000, b:u=>'https://cors.eu.org/'+u },
-  { n:'allorigins', t:12000, b:u=>'https://api.allorigins.win/raw?url='+enc(u) },
-  { n:'codetabs',   t:13000, b:u=>'https://api.codetabs.com/v1/proxy?quest='+enc(u) },
-  { n:'workers.dev',t:11000, b:u=>'https://test.cors.workers.dev/?'+u },
-  { n:'jina',       t:12000, b:u=>'https://r.jina.ai/'+u, hdr:true },
-  { n:'direct',     t:7000,  b:u=>u },
-  { n:'isogit',     t:11000, b:u=>'https://cors.isomorphic-git.org/'+u },
-  { n:'thingproxy', t:13000, b:u=>'https://thingproxy.freeboard.io/fetch/'+u },
-  { n:'corsproxy',  t:11000, b:u=>'https://corsproxy.io/?url='+enc(u) },
-  { n:'allorigins-j',t:13000,jsonp:true, b:u=>'https://api.allorigins.win/get?url='+enc(u), pick:d=>d&&d.contents },
-  { n:'whateverorigin',t:13000,jsonp:true, b:u=>'https://whateverorigin.org/get?url='+enc(u), pick:d=>d&&d.contents }
+  { n:'corsproxy.io',   t:11000, b:u=>'https://corsproxy.io/?url='+enc(u) },
+  { n:'workers.dev',    t:11000, b:u=>'https://test.cors.workers.dev/?'+u },
+  { n:'allorigins',     t:15000, b:u=>'https://api.allorigins.win/raw?url='+enc(u) },
+  { n:'jina',           t:15000, b:u=>'https://r.jina.ai/'+u, hdr:true },
+  { n:'direct',         t:6000,  b:u=>u },
+  { n:'cors.lol',       t:11000, b:u=>'https://api.cors.lol/?url='+enc(u) },
+  { n:'thingproxy',     t:15000, b:u=>'https://thingproxy.freeboard.io/fetch/'+u },
+  { n:'codetabs',       t:13000, b:u=>'https://api.codetabs.com/v1/proxy?quest='+enc(u) },
+  { n:'allorigins-json',t:15000, jsonp:true, b:u=>'https://api.allorigins.win/get?url='+enc(u), pick:d=>d&&d.contents }
 ];
 function jsonp(url,to){
   return new Promise((res,rej)=>{
@@ -382,32 +377,59 @@ async function oneFetch(p,url){
   try{
     if(p.jsonp){
       const d=await jsonp(p.b(url),p.t);
-      const txt=p.pick?p.pick(d):(typeof d==='string'?d:JSON.stringify(d));
-      return { text:String(txt||''), header:null };
+      let txt = '';
+      if (typeof d === 'object' && d !== null) {
+        if (p.pick) {
+          const picked = p.pick(d);
+          txt = typeof picked === 'string' ? picked : JSON.stringify(picked);
+        } else {
+          txt = JSON.stringify(d);
+        }
+      } else if (typeof d === 'string') {
+        txt = d;
+      }
+      // attempt to extract header from jsonp response (sometimes available)
+      let header = null;
+      if (d && d.headers && d.headers['x-kahoot-session-token']) {
+        header = d.headers['x-kahoot-session-token'];
+      }
+      return { text: txt || '', header };
     }
     const r=await fetch(p.b(url),{signal:ctl.signal,cache:'no-store'});
     if(!r.ok) throw new Error('http '+r.status);
     const text=await r.text();
-    let header=null; try{ header=r.headers.get('x-kahoot-session-token'); }catch(e){}
+    let header=null; 
+    try{ 
+      // fetch API doesn't expose all headers via CORS; but some proxies include them in body
+      const rawHeaders = r.headers;
+      if (rawHeaders.has('x-kahoot-session-token')) {
+        header = rawHeaders.get('x-kahoot-session-token');
+      }
+    } catch(e){}
+    // also try to extract from body if the proxy embeds it (e.g., jina)
     return { text, header };
   } finally { clearTimeout(to); }
 }
-/* collect as many (header, challenge) pairs as possible */
 async function grabSession(pin, rounds){
   const found=[];
-  rounds=rounds||2;
+  rounds=rounds||3;
   for(let r=0;r<rounds;r++){
-    if(r) await sleep(400);
-    await Promise.all(PROXIES.map((p,i)=>sleep(i*45).then(async()=>{
+    if(r) await sleep(500);
+    // sequential staggered fetches to avoid hitting same proxy simultaneously
+    for (const p of PROXIES) {
+      await sleep(50);
       try{
         const res=await oneFetch(p,R+pin+'/?_='+Date.now()+rnd(4));
         const chal=extractChallenge(res.text);
         if(res.header||chal){
           found.push({ src:p.n, header:res.header, challenge:chal });
           log('src '+p.n+' → '+(res.header?'header ':'')+(chal?'challenge':''), res.header&&chal?'ok':'l');
+          if (res.header && chal) break; // early exit if we have a pair
         }
-      }catch(e){ if(!r) log('src '+p.n+' fail: '+(e&&e.name==='AbortError'?'timeout':e.message),'l'); }
-    })));
+      }catch(e){ 
+        log('src '+p.n+' fail: '+(e&&e.name==='AbortError'?'timeout':e.message),'l');
+      }
+    }
     if(found.some(f=>f.header&&f.challenge)) break;
   }
   const hdr=found.filter(f=>f.header).length, ch=found.filter(f=>f.challenge).length;
@@ -430,31 +452,38 @@ function buildTokens(sessions){
     }
     if(s.challenge){
       for(const de of decoders(s.challenge)){
-        try{ const t=de.fn((s.challenge.match(/decode\.call\(this\s*,\s*'([^']*)'\)/)||[])[1]||''); if(t) cv.push({v:t,tag:de.tag}); }catch(e){}
+        try{ 
+          const challengeStr = s.challenge; // the raw challenge string
+          // find the string inside decode.call(this, '...')
+          const match = challengeStr.match(/decode\.call\(this\s*,\s*'([^']*)'\)/);
+          const input = match ? match[1] : '';
+          const t = de.fn(input);
+          if(t) cv.push({v:t,tag:de.tag});
+        } catch(e){}
       }
     }
   }
   /* dedupe variant lists */
   const uniq=list=>{ const s2=new Set(); return list.filter(x=>{ if(s2.has(x.v)) return false; s2.add(x.v); return true; }); };
-  const H=uniq(hv).slice(0,3), C=uniq(cv).slice(0,3);
+  const H=uniq(hv).slice(0,4), C=uniq(cv).slice(0,4);
 
-  /* 1. the real recipe — header XOR challenge, same response */
+  /* 1. main XOR: header (b64 decoded) XOR challenge (decoded) */
   for(const s of sessions){
     if(!s.header||!s.challenge) continue;
     const dh=b64dec(s.header); if(!dh) continue;
     for(const c of C) push(xorTokens(dh,c.v),'xor(b64hdr,'+c.tag+')');
   }
-  /* 2. header as-is XOR */
+  /* 2. raw header XOR */
   for(const s of sessions){
     if(!s.header||!s.challenge) continue;
     for(const c of C) push(xorTokens(String(s.header).trim(),c.v),'xor(rawhdr,'+c.tag+')');
   }
-  /* 3. cross-response XOR (in case header is game-scoped) */
+  /* 3. cross XOR */
   for(const h of H) for(const c of C) push(xorTokens(h.v,c.v),'xor('+h.tag+','+c.tag+')');
-  /* 4. un-XORed fallbacks */
+  /* 4. fallback raw tokens */
   for(const h of H) push(h.v,h.tag);
   for(const c of C) push(c.v,c.tag);
-  return out.slice(0,14);
+  return out.slice(0,16);
 }
 
 /* ===================== websocket shapes + probe ===================== */
@@ -466,16 +495,25 @@ const SHAPES=[
   { scheme:'wss', host:'kahoot.it',      mode:'enc',  tag:'wss/enc' },
   { scheme:'wss', host:'kahoot.it',      mode:'safe', tag:'wss/safe' },
   { scheme:'wss', host:'kahoot.it',      mode:'raw',  tag:'wss/raw' },
-  { scheme:'wss', host:'play.kahoot.it', mode:'enc',  tag:'play/enc' }
+  { scheme:'wss', host:'play.kahoot.it', mode:'enc',  tag:'play/enc' },
+  { scheme:'wss', host:'kahoot.it',      mode:'enc',  tag:'wss/enc/trail', url: (p,t)=>'wss://kahoot.it/cometd/'+p+'/'+modeEnc('enc',t)+'/' }
 ];
 let EP={scheme:'wss',host:'kahoot.it',mode:'enc'};
-function wsUrl(pin,token){ return EP.scheme+'://'+EP.host+'/cometd/'+pin+'/'+modeEnc(EP.mode,token); }
+function wsUrl(pin,token){ 
+  return EP.scheme+'://'+EP.host+'/cometd/'+pin+'/'+modeEnc(EP.mode,token); 
+}
 const HS=id=>JSON.stringify([{channel:'/meta/handshake',version:'1.0',minimumVersion:'1.0',
   supportedConnectionTypes:['websocket','long-polling'],advice:{timeout:60000,interval:0},
   ext:{ack:true,timesync:true},id:String(id)}]);
 
 function probe(pin,token,sh,timeout){
-  const url=sh.scheme+'://'+sh.host+'/cometd/'+pin+'/'+modeEnc(sh.mode,token);
+  // build url
+  let url;
+  if (sh.url) {
+    url = sh.url(pin, token);
+  } else {
+    url = sh.scheme+'://'+sh.host+'/cometd/'+pin+'/'+modeEnc(sh.mode,token);
+  }
   return new Promise(res=>{
     let ws,done=false,opened=false;
     const fin=(ok,why)=>{ if(done)return; done=true; clearTimeout(tm); try{ws&&ws.close();}catch(e){} res({opened,ok,why,url}); };
@@ -507,7 +545,7 @@ async function wsTest(){
   banner('Sockets are blocked in this frame. Host the file and embed by URL.','bad');
 }
 
-/* ===================== resolver ===================== */
+/* ===================== resolver (retry loop) ===================== */
 let RESOLVING=false, LOCKED=null;
 async function resolveToken(pin,manual){
   if(RESOLVING) throw new Error('resolver busy');
@@ -535,7 +573,7 @@ async function resolveToken(pin,manual){
 
     for(const c of cands){
       for(const sh of SHAPES){
-        const r=await probe(pin,c.t,sh,4500);
+        const r=await probe(pin,c.t,sh,6500);
         log('probe «'+c.tag+'» '+sh.tag+' → '+(r.ok?'HANDSHAKE OK':r.why),r.ok?'ok':'l');
         if(r.ok){
           EP={scheme:sh.scheme,host:sh.host,mode:sh.mode};
@@ -735,7 +773,11 @@ async function armJoin(){
     }catch(e){
       tries++;
       log('attempt '+tries+': '+e.message,'warn');
-      banner('Not in yet — '+(tries<3?'game may not be live. Retrying…':'retrying every 3s.'),'warn');
+      if (tries >= 3) {
+        banner('Connection failed after 3 attempts. Try a different PIN or manual token.','bad');
+        return;
+      }
+      banner('Not in yet — retrying in 3s…','warn');
       await sleep(3000);
     }
   }
@@ -755,7 +797,7 @@ async function swarm(){
   banner('Spawning '+n+' bots…','warn');
   let ok=0,bad=0; const jobs=[];
   for(let i=0;i<n;i++){
-    await sleep(12);
+    await sleep(15);
     const name=$('#uniq').checked?base+i:base;
     const pl=new Player(p,name,tk,{
       join:()=>{ ok++; tick(); if(ok%10===0) log('bots in '+ok+'/'+n,'ok'); },
