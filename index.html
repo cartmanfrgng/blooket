@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Kahoot Hijack</title>
+<style>
+:root{
+  --blue:#007AFF; --green:#34C759; --red:#FF3B30; --orange:#FF9500; --yellow:#FFCC00; --purple:#AF52DE;
+  --bg:#F2F2F7; --card:#FFFFFF; --sep:rgba(60,60,67,.22); --sep2:rgba(60,60,67,.12);
+  --label:#000; --label2:rgba(60,60,67,.62); --label3:rgba(60,60,67,.32);
+  --fill:rgba(120,120,128,.10); --fill2:rgba(120,120,128,.18);
+  --nav:rgba(249,249,249,.82); --bar:rgba(249,249,249,.86); --segsel:#fff;
+  --a0:#E21B3C; --a1:#1368CE; --a2:#D89E00; --a3:#26890C;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#000; --card:#1C1C1E; --sep:rgba(84,84,88,.55); --sep2:rgba(84,84,88,.32);
+    --label:#fff; --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
+    --fill:rgba(120,120,128,.20); --fill2:rgba(120,120,128,.32);
+    --nav:rgba(30,30,32,.82); --bar:rgba(30,30,32,.86); --segsel:#636366;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{
+  background:var(--bg);color:var(--label);
+  font:400 17px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Inter,system-ui,sans-serif;
+  min-height:100vh;letter-spacing:-.1px;
+}
+.app{max-width:600px;margin:0 auto;padding-bottom:8px}
+.nav{position:sticky;top:0;z-index:20;background:var(--nav);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--sep);padding:12px 18px 11px}
+.nav h1{margin:0;font-size:27px;font-weight:700;letter-spacing:-.7px}
+.nav .sub{font-size:12px;color:var(--label2);margin-top:1px}
+.dots{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.pill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--fill);color:var(--label2);letter-spacing:0;white-space:nowrap}
+.pill.ok{background:rgba(52,199,89,.16);color:#248A3D}
+.pill.bad{background:rgba(255,59,48,.16);color:#D70015}
+.pill.warn{background:rgba(255,149,0,.18);color:#C93400}
+@media (prefers-color-scheme:dark){
+  .pill.ok{color:#30D158}.pill.bad{color:#FF453A}.pill.warn{color:#FF9F0A}
+}
+.banner{margin:12px 18px 0;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.4;display:none}
+.banner.show{display:block}
+.banner.warn{background:rgba(255,149,0,.14);color:#C93400}
+.banner.bad{background:rgba(255,59,48,.14);color:#D70015}
+.banner.ok{background:rgba(52,199,89,.14);color:#248A3D}
+@media (prefers-color-scheme:dark){
+  .banner.warn{color:#FF9F0A}.banner.bad{color:#FF453A}.banner.ok{color:#30D158}
+}
+.page{padding:16px 18px 0;display:none}
+.page.on{display:block}
+h2.sec{font-size:13px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.4px;margin:0 0 7px 4px}
+.card{background:var(--card);border-radius:12px;overflow:hidden;margin-bottom:18px}
+.row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--sep2);min-height:46px}
+.row:last-child{border-bottom:none}
+.row .k{font-size:16px;flex:1;min-width:0}
+.row .v{font-size:16px;color:var(--label2);text-align:right;font-variant-numeric:tabular-nums}
+.row.stack{display:block}
+input,textarea,select{
+  width:100%;background:var(--fill);border:none;color:var(--label);border-radius:10px;
+  padding:11px 13px;font:400 17px/1.2 inherit;outline:none;-webkit-appearance:none;
+}
+input:focus,textarea:focus{border:1.5px solid var(--blue);padding:9.5px 11.5px}
+textarea{resize:vertical;min-height:74px;font:400 13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
+input[inputmode=numeric]{font-variant-numeric:tabular-nums;letter-spacing:2px;font-weight:600}
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:14px;border:none;border-radius:12px;font:600 17px/1 inherit;background:var(--fill);color:var(--label);cursor:pointer;transition:opacity .12s}
+.btn:active{opacity:.68}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.green{background:var(--green);color:#fff}
+.btn.red{background:var(--red);color:#fff}
+.btn.orange{background:var(--orange);color:#fff}
+.btn.sm{padding:10px;font-size:15px;border-radius:10px}
+.btn:disabled{opacity:.4}
+.btns{display:flex;gap:9px}
+.btns .btn{flex:1}
+.sw{position:relative;width:51px;height:31px;flex:0 0 auto}
+.sw input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;z-index:2;cursor:pointer;padding:0}
+.sw i{position:absolute;inset:0;background:var(--fill2);border-radius:16px;transition:background .2s}
+.sw i:after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.2);transition:transform .2s}
+.sw input:checked+i{background:var(--green)}
+.sw input:checked+i:after{transform:translateX(20px)}
+.stepper{display:flex;align-items:center;background:var(--fill);border-radius:9px;overflow:hidden}
+.stepper button{width:38px;height:32px;border:none;background:none;color:var(--label);font:400 19px/1 inherit;cursor:pointer}
+.stepper button:active{background:var(--fill2)}
+.stepper span{min-width:44px;text-align:center;font-size:16px;font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;background:transparent;padding:0;height:32px}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--fill2);border-radius:3px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);margin-top:-11px}
+.qcard{background:var(--card);border-radius:12px;padding:15px;margin-bottom:18px}
+.qhead{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--label2);font-weight:600}
+.qtext{font-size:19px;font-weight:700;line-height:1.3;margin:9px 0 13px;letter-spacing:-.3px;min-height:26px}
+.bar{height:5px;background:var(--fill2);border-radius:3px;overflow:hidden;margin-bottom:13px}
+.bar>i{display:block;height:100%;width:0;background:var(--blue);transition:width .2s linear}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ans{border-radius:12px;padding:15px 11px;color:#fff;font-size:15px;font-weight:600;line-height:1.25;cursor:pointer;display:flex;gap:8px;align-items:flex-start;min-height:66px;transition:transform .1s}
+.ans:active{transform:scale(.97)}
+.ans .sh{font-size:15px;opacity:.9;flex:0 0 auto}
+.ans.g0{background:var(--a0)}.ans.g1{background:var(--a1)}.ans.g2{background:var(--a2)}.ans.g3{background:var(--a3)}
+.ans.hit{outline:3px solid var(--green);outline-offset:2px}
+.ans.miss{opacity:.4}
+.log{background:var(--card);border-radius:12px;padding:10px 12px;height:56vh;overflow:auto;font:400 11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-word}
+.log div{padding:1px 0;border-bottom:1px solid var(--sep2)}
+.log .t{color:var(--label3);margin-right:6px}
+.l{color:var(--label2)}.ok{color:#248A3D}.err{color:#D70015}.warn{color:#C93400}.inf{color:var(--blue)}.mag{color:var(--purple)}
+@media (prefers-color-scheme:dark){.ok{color:#30D158}.err{color:#FF453A}.warn{color:#FF9F0A}.inf{color:#0A84FF}.mag{color:#BF5AF2}}
+.tabbar{position:sticky;bottom:0;z-index:20;display:flex;background:var(--bar);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--sep);padding:5px 0 calc(5px + env(safe-area-inset-bottom))}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--label3);font:500 10px/1 inherit;padding:5px 2px;cursor:pointer;letter-spacing:0}
+.tabbar button[aria-selected=true]{color:var(--blue)}
+.tabbar svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hint{font-size:12px;color:var(--label2);line-height:1.45;margin:-10px 4px 18px}
+.tok{font:400 10.5px/1.4 ui-monospace,monospace;color:var(--purple);word-break:break-all;padding:0 4px}
+#ytw iframe{width:100%;height:70px;border:0;border-radius:10px;display:block;margin-top:8px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--label3);margin-right:5px;vertical-align:1px}
+.dot.ok{background:var(--green)}.dot.bad{background:var(--red)}.dot.warn{background:var(--orange)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="nav">
+  <h1>Kahoot Hijack</h1>
+  <div class="sub">direct to kahoot.it — no relay</div>
+  <div class="dots">
+    <span class="pill" id="pFrame"><span class="dot"></span>frame</span>
+    <span class="pill" id="pSock"><span class="dot"></span>0 sockets</span>
+    <span class="pill" id="pTok"><span class="dot"></span>token idle</span>
+    <span class="pill" id="pEp"><span class="dot"></span>endpoint</span>
+  </div>
+</header>
+
+<div class="banner" id="banner"></div>
+
+<!-- ======================= ME ======================= -->
+<section class="page on" id="page-me">
+  <h2 class="sec">Game</h2>
+  <div class="card">
+    <div class="row stack"><input id="pin" inputmode="numeric" maxlength="9" placeholder="Game PIN" value=""></div>
+    <div class="row stack"><input id="nick" maxlength="15" placeholder="Your name" value="venice"></div>
+    <div class="row">
+      <span class="k">Bot count</span>
+      <div class="stepper">
+        <button data-step="-5">−</button>
+        <span id="cntv">20</span>
+        <button data-step="5">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="btns" style="margin-bottom:9px">
+    <button class="btn primary" id="join">Join as me</button>
+    <button class="btn" id="swarm">Swarm</button>
+  </div>
+  <div class="btns" style="margin-bottom:18px">
+    <button class="btn sm" id="wstest">Socket test</button>
+    <button class="btn sm" id="stop">Stop</button>
+  </div>
+  <p class="hint" id="armHint">Type the PIN and tap Join. If the lobby isn't open yet it keeps retrying by itself until it is.</p>
+
+  <h2 class="sec">Live</h2>
+  <div class="qcard">
+    <div class="qhead"><span>Question <span id="qIdx">–</span></span><span id="qTime">–</span></div>
+    <div class="qtext" id="qText">waiting for a game…</div>
+    <div class="bar"><i id="qBar"></i></div>
+    <div class="answers" id="answers"></div>
+  </div>
+  <div class="card">
+    <div class="row"><span class="k">Auto-answer</span><label class="sw"><input type="checkbox" id="auto" checked><i></i></label></div>
+    <div class="row"><span class="k">Accuracy</span><span class="v" id="accv">100%</span></div>
+    <div class="row stack" style="padding-top:0;border:none"><input type="range" id="acc" min="0" max="100" value="100"></div>
+    <div class="row"><span class="k">Delay</span><span class="v" id="dlv">120 ms</span></div>
+    <div class="row stack" style="padding-top:0;border:none"><input type="range" id="delay" min="0" max="3000" step="20" value="120"></div>
+  </div>
+  <div class="btns" style="margin-bottom:18px">
+    <button class="btn sm green" id="fc">All correct</button>
+    <button class="btn sm" id="fr">All random</button>
+  </div>
+</section>
+
+<!-- ======================= BOTS ======================= -->
+<section class="page" id="page-bots">
+  <h2 class="sec">Swarm</h2>
+  <div class="card">
+    <div class="row"><span class="k">Count</span><span class="v" id="cntv2">20</span></div>
+    <div class="row stack" style="padding-top:0;border:none"><input type="range" id="count" min="1" max="120" value="20"></div>
+    <div class="row"><span class="k">Unique names</span><label class="sw"><input type="checkbox" id="uniq" checked><i></i></label></div>
+  </div>
+  <div class="btns" style="margin-bottom:18px">
+    <button class="btn primary" id="swarm2">Spawn bots</button>
+    <button class="btn" id="rejoin">Rejoin dead</button>
+  </div>
+  <h2 class="sec">Steal / boot a name</h2>
+  <div class="card">
+    <div class="row stack"><input id="target" placeholder="their exact name"></div>
+  </div>
+  <div class="btns" style="margin-bottom:18px">
+    <button class="btn sm orange" id="boot1">Boot ×1</button>
+    <button class="btn sm orange" id="boot5">Boot ×5</button>
+    <button class="btn sm" id="boot20">Boot ×20</button>
+  </div>
+  <p class="hint">Logs in under their name. Duplicate logins make Kahoot drop the older holder — ×5 usually empties their slot.</p>
+</section>
+
+<!-- ======================= TOOLS ======================= -->
+<section class="page" id="page-tools">
+  <h2 class="sec">Blast — every screen sees it</h2>
+  <div class="card"><div class="row stack"><input id="blast" placeholder="text on the host screen" value="venice was here"></div></div>
+  <div class="btns" style="margin-bottom:9px">
+    <button class="btn sm orange" id="blastGo">Blast</button>
+    <button class="btn sm" id="blast5">×5</button>
+    <button class="btn sm" id="blast20">×20</button>
+  </div>
+  <div class="btns" style="margin-bottom:18px">
+    <button class="btn sm" data-b="LAG!">LAG!</button>
+    <button class="btn sm" data-b="ez">ez</button>
+    <button class="btn sm" data-b="BOT">BOT</button>
+    <button class="btn sm" data-b="gg">gg</button>
+  </div>
+  <button class="btn primary" id="chaos" style="margin-bottom:18px">Chaos</button>
+
+  <h2 class="sec">Sound</h2>
+  <div class="card">
+    <div class="row stack"><input id="yt" value="dQw4w9WgXcQ" placeholder="youtube id or link"></div>
+    <div class="row"><span class="k">Loop</span><label class="sw"><input type="checkbox" id="ytLoop" checked><i></i></label></div>
+    <div class="row"><span class="k">Read question aloud</span><label class="sw"><input type="checkbox" id="tts"><i></i></label></div>
+    <div class="row"><span class="k">Beeps</span><label class="sw"><input type="checkbox" id="beeps" checked><i></i></label></div>
+  </div>
+  <div class="btns" style="margin-bottom:18px">
+    <button class="btn sm" id="ytPlay">Play</button>
+    <button class="btn sm" id="ytStop">Stop</button>
+  </div>
+  <div id="ytw"></div>
+
+  <h2 class="sec" style="margin-top:18px">Raw cometd</h2>
+  <div class="card">
+    <div class="row stack"><input id="rchan" value="/service/controller"></div>
+    <div class="row stack"><textarea id="rdata" rows="4">{ "type": "message", "gameid": "PIN", "host": "kahoot.it", "id": 1, "content": "{\"type\":\"message\",\"message\":\"hi\"}" }</textarea></div>
+  </div>
+  <button class="btn" id="rgo" style="margin-bottom:18px">Publish to all sockets</button>
+
+  <h2 class="sec">Token</h2>
+  <div class="card"><div class="row stack"><input id="tok" placeholder="paste a token to override (optional)"></div></div>
+  <div class="tok" id="tokView"></div>
+  <div class="btns" style="margin-top:9px;margin-bottom:18px">
+    <button class="btn sm" id="diag">Diagnose</button>
+    <button class="btn sm" id="tokClear">Clear token</button>
+  </div>
+  <p class="hint">Token is fetched and decoded automatically. This box is only for when school wifi blocks every route.</p>
+</section>
+
+<!-- ======================= LOG ======================= -->
+<section class="page" id="page-log">
+  <div class="btns" style="margin-bottom:12px">
+    <button class="btn sm" id="copy">Copy log</button>
+    <button class="btn sm" id="clr">Clear</button>
+  </div>
+  <div class="log" id="log"></div>
+</section>
+
+<nav class="tabbar">
+  <button data-tab="me" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c0-3.7 3.3-6.6 7.4-6.6s7.4 2.9 7.4 6.6"/></svg>Me</button>
+  <button data-tab="bots" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>Bots</button>
+  <button data-tab="tools" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 8h9M18.5 8H20M4 16h3M12.5 16H20"/><circle cx="15.5" cy="8" r="2.4"/><circle cx="9.5" cy="16" r="2.4"/></svg>Tools</button>
+  <button data-tab="log" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h10"/></svg>Log</button>
+</nav>
+</div>
+
+<script>
+/* ===================== tiny utils ===================== */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rnd = n => Math.random().toString(36).slice(2, 2 + n);
+const enc = encodeURIComponent;
+const S = {
+  get(k, d){ try { const v = localStorage.getItem('kh_' + k); return v === null ? d : v; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem('kh_' + k, v); } catch(e){} },
+  del(k){ try { localStorage.removeItem('kh_' + k); } catch(e){} }
+};
+function pill(id, txt, kind){
+  const e = $(id); if (!e) return;
+  e.className = 'pill' + (kind ? ' ' + kind : '');
+  e.innerHTML = '<span class="dot ' + (kind === 'ok' ? 'ok' : kind === 'bad' ? 'bad' : kind === 'warn' ? 'warn' : '') + '"></span>' + txt;
+}
+function banner(msg, kind){
+  const b = $('#banner');
+  if (!msg){ b.className = 'banner'; return; }
+  b.className = 'banner show ' + (kind || 'warn');
+  b.textContent = msg;
+}
+
+/* ===================== log ===================== */
+const logEl = $('#log');
+const T0 = Date.now();
+function log(msg, cls){
+  const d = document.createElement('div');
+  d.className = cls || 'l';
+  d.innerHTML = '<span class="t">' + ((Date.now() - T0) / 1000).toFixed(1) + 's</span>' +
+    String(msg).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  logEl.appendChild(d);
+  while (logEl.childNodes.length > 500) logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+/* ===================== beeps ===================== */
+let AC = null;
+function beep(freq, dur, type){
+  if (!$('#beeps').checked) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.07, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + (dur || 0.12));
+    o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime + (dur || 0.12));
+  } catch(e){}
+}
+
+/* ===================== socket layer ===================== */
+function openSocket(url, timeout){
+  return new Promise(res => {
+    let ws, done = false;
+    const fin = (ok, why) => { if (done) return; done = true; clearTimeout(tm); try { ws && ws.close(); } catch(e){} res({ ok, why, url }); };
+    const tm = setTimeout(() => fin(false, 'no open in ' + timeout + 'ms'), timeout);
+    if (typeof WebSocket === 'undefined') return fin(false, 'WebSocket undefined in this frame');
+    try { ws = new WebSocket(url); }
+    catch(e){ return fin(false, 'ctor ' + (e && e.name || '?') + ': ' + (e && e.message || e)); }
+    ws.onopen = () => fin(true, 'open');
+    ws.onerror = () => {};
+    ws.onclose = e => fin(false, 'closed ' + e.code + (e.reason ? ' "' + e.reason + '"' : ''));
+  });
+}
+
+const ECHO = ['wss://ws.postman-echo.com/raw', 'wss://ws.ifelse.io'];
+async function wsTest(){
+  log('frame origin=' + (location.origin || 'null') + ' proto=' + location.protocol +
+      ' WebSocket=' + (typeof WebSocket) + ' top=' + (window.top === window ? 'self' : 'iframe'), 'inf');
+  if (typeof WebSocket === 'undefined'){
+    pill('#pFrame', 'no sockets', 'bad');
+    banner('This embed strips WebSocket. Host the file and embed by URL instead.', 'bad');
+    return;
+  }
+  for (const u of ECHO){
+    const r = await openSocket(u, 6000);
+    log('echo ' + u.replace(/^wss:\/\//, '') + ' → ' + (r.ok ? 'OPEN OK' : r.why), r.ok ? 'ok' : 'err');
+    if (r.ok){ pill('#pFrame', 'sockets ok', 'ok'); banner(''); return log('Sockets work here. Now type a PIN and hit Join.', 'ok'); }
+  }
+  pill('#pFrame', 'sockets blocked', 'bad');
+  banner('Sockets are blocked inside this embed. Host the file on GitHub Pages and use Sites → Embed → By URL.', 'bad');
+  log('Even an echo server fails → the iframe is blocking sockets.', 'err');
+}
+
+/* ===================== token ===================== */
+const R = 'https://kahoot.it/reserve/session/';
+const TRANSPORTS = [
+  { n:'cors.lol',   t:12000, b:u => 'https://api.cors.lol/?url=' + enc(u) },
+  { n:'allorigins', t:14000, b:u => 'https://api.allorigins.win/raw?url=' + enc(u) },
+  { n:'jina',       t:14000, b:u => 'https://r.jina.ai/' + u },
+  { n:'direct',     t:8000,  b:u => u },
+  { n:'codetabs',   t:16000, b:u => 'https://api.codetabs.com/v1/proxy?quest=' + enc(u) },
+  { n:'isogit',     t:12000, b:u => 'https://cors.isomorphic-git.org/' + u },
+  { n:'allorigins-j', t:16000, jsonp:true, b:u => 'https://api.allorigins.win/get?url=' + enc(u), pick:d => d && d.contents },
+  { n:'thingproxy', t:14000, b:u => 'https://thingproxy.freeboard.io/fetch/' + u },
+  { n:'cors.eu.org',t:12000, b:u => 'https://cors.eu.org/' + u },
+  { n:'play-direct',t:8000,  b:u => u.replace('kahoot.it', 'play.kahoot.it') },
+];
+function jsonp(url, timeout){
+  return new Promise((res, rej) => {
+    const cb = '__k' + rnd(8), s = document.createElement('script');
+    let done = false;
+    const clean = () => { clearTimeout(tm); try { delete window[cb]; } catch(e){} s.remove(); };
+    const tm = setTimeout(() => { if (!done){ done = true; clean(); rej(new Error('jsonp timeout')); } }, timeout);
+    window[cb] = d => { if (done) return; done = true; clean(); res(d); };
+    s.onerror = () => { if (done) return; done = true; clean(); rej(new Error('jsonp error')); };
+    s.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+    document.head.appendChild(s);
+  });
+}
+async function runTransport(tr, url, pin){
+  const ctl = new AbortController();
+  const to = setTimeout(() => ctl.abort(), tr.t);
+  try {
+    if (tr.jsonp){
+      const d = await jsonp(tr.b(url, pin), tr.t);
+      const txt = tr.pick ? tr.pick(d) : (typeof d === 'string' ? d : JSON.stringify(d));
+      if (!txt) throw new Error('empty');
+      return { text: String(txt), header: null };
+    }
+    const r = await fetch(tr.b(url, pin), { signal: ctl.signal, cache: 'no-store' });
+    if (!r.ok) throw new Error('http ' + r.status);
+    const text = await r.text();
+    let header = null; try { header = r.headers.get('x-kahoot-session-token'); } catch(e){}
+    if (!text && !header) throw new Error('empty');
+    return { text, header };
+  } finally { clearTimeout(to); }
+}
+function extractChallenge(t){
+  if (!t) return null;
+  let ch = null;
+  try { const j = JSON.parse(t); if (j && typeof j.challenge === 'string') ch = j.challenge; } catch(e){}
+  if (!ch){ const m = t.match(/"challenge"\s*:\s*"((?:[^"\\]|\\.)*)"/); if (m){ try { ch = JSON.parse('"' + m[1] + '"'); } catch(e){ ch = m[1]; } } }
+  if (!ch){ const m = t.match(/decode\.call\(this[\s\S]*/); if (m) ch = m[0]; }
+  return ch;
+}
+function buildDecoder(ch){
+  try {
+    const s = ch.indexOf('function decode');
+    if (s >= 0){
+      let body = ch.slice(s).trim();
+      const e = body.lastIndexOf('}');
+      if (e >= 0) body = body.slice(0, e + 1);
+      const _ = { replace: (a, re, fn) => String(a).replace(re, fn) };
+      const angular = { isObject: () => false, isNumber: () => false };
+      const f = new Function('_', 'angular', body + '\nreturn decode;')(_, angular);
+      if (typeof f === 'function') return str => f.call({ angular, _ }, String(str));
+    }
+  } catch(e){ log('decoder eval failed: ' + e.message, 'warn'); }
+  let offset = 0;
+  const om = ch.match(/var\s+offset\s*=\s*([^;]+);/);
+  if (om){ try { offset = Function('return (' + om[1] + ')')(); } catch(e){} }
+  const mm = ch.match(/%\s*(\d+)/);                 const mod  = mm ? +mm[1] : 77;
+  const pm = ch.match(/%\s*\d+\s*\)\s*\+\s*(\d+)/); const plus = pm ? +pm[1] : 48;
+  return str => { let o = ''; for (let i = 0; i < str.length; i++) o += String.fromCharCode((((str.charCodeAt(i) * i) + offset) % mod) + plus); return o; };
+}
+function buildCandidates(text, header){
+  const out = [], seen = new Set();
+  const push = (t, tag) => { if (t && t.length > 4 && !seen.has(t)){ seen.add(t); out.push({ t, tag }); } };
+  const ch = extractChallenge(text);
+  if (ch){
+    const em = ch.match(/decode\.call\(this\s*,\s*'([^']*)'\)/);
+    const emb = em ? em[1] : null;
+    const dec = buildDecoder(ch);
+    if (emb && dec) push(dec(emb), 'decoded');
+    if (header && dec) push(dec(header), 'decoded-hdr');
+    if (emb) push(emb, 'raw');
+  }
+  if (header) push(header, 'raw-hdr');
+  for (const c of out.slice()){ try { const d = atob(c.t); if (d) push(d, c.tag + '+b64'); } catch(e){} }
+  return out;
+}
+
+/* ===================== probe ===================== */
+const MINRE = /[\\?#%\[\]{}|^`<>"]/g;
+const minEnc = s => s.replace(MINRE, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+const VARIANTS = [
+  { host:'kahoot.it',      mode:'enc', scheme:'wss', tag:'wss/enc' },
+  { host:'kahoot.it',      mode:'raw', scheme:'wss', tag:'wss/raw' },
+  { host:'kahoot.it',      mode:'min', scheme:'wss', tag:'wss/min' },
+  { host:'play.kahoot.it', mode:'enc', scheme:'wss', tag:'play/enc' },
+  { host:'kahoot.it',      mode:'enc', scheme:'ws',  tag:'ws/enc' }
+];
+const inUrl = (m, t) => m === 'enc' ? enc(t) : m === 'min' ? minEnc(t) : t;
+let EP = { host:'kahoot.it', mode:'enc', scheme:'wss' };
+function wsUrl(pin, token){ return EP.scheme + '://' + EP.host + '/cometd/' + pin + '/' + inUrl(EP.mode, token); }
+const HS = id => JSON.stringify([{ channel:'/meta/handshake', version:'1.0', minimumVersion:'1.0',
+  supportedConnectionTypes:['websocket','long-polling'], advice:{ timeout:60000, interval:0 },
+  ext:{ ack:true, timesync:true }, id:String(id) }]);
+
+function probe(pin, token, v, timeout){
+  const url = v.scheme + '://' + v.host + '/cometd/' + pin + '/' + inUrl(v.mode, token);
+  return new Promise(res => {
+    let ws, done = false;
+    const fin = (ok, why) => { if (done) return; done = true; clearTimeout(tm); try { ws && ws.close(); } catch(e){} res({ ok, why, url }); };
+    const tm = setTimeout(() => fin(false, 'no handshake in ' + timeout + 'ms'), timeout);
+    try { ws = new WebSocket(url); }
+    catch(e){ return fin(false, 'ctor ' + (e && e.name || '?') + ': ' + (e && e.message || e)); }
+    ws.onopen = () => { try { ws.send(HS(1)); } catch(e){ fin(false, 'send failed'); } };
+    ws.onerror = () => {};
+    ws.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch(e){ return fin(false, 'non-json frame'); }
+      (Array.isArray(m) ? m : [m]).forEach(x => {
+        if (x && x.channel === '/meta/handshake')
+          fin(!!x.successful, x.successful ? 'OK' : 'REJECTED: ' + (x.error || 'no error field'));
+      });
+    };
+    ws.onclose = e => fin(false, 'closed ' + e.code + (e.reason ? ' "' + e.reason + '"' : ''));
+  });
+}
+
+/* ===================== resolver ===================== */
+let RESOLVING = false, LOCKED = null;
+async function resolveToken(pin, manual){
+  if (RESOLVING) throw new Error('resolver busy');
+  RESOLVING = true;
+  try {
+    const cands = [];
+    let settled = false, winner = null, ep = null;
+    const add = list => { for (const c of list) if (!cands.some(x => x.t === c.t)) cands.push(c); };
+
+    const drain = (async () => {
+      let i = 0;
+      while (true){
+        if (i >= cands.length){ if (settled) break; await sleep(120); continue; }
+        const c = cands[i++];
+        for (const v of VARIANTS){
+          const r = await probe(pin, c.t, v, 7000);
+          log('probe ' + c.tag + ' ' + v.tag + ' → ' + (r.ok ? 'OK' : r.why), r.ok ? 'ok' : 'l');
+          if (r.ok){ winner = c; ep = v; return; }
+        }
+      }
+    })();
+
+    if (manual){
+      log('token: manual (' + manual.length + ' chars)', 'inf');
+      add([{ t: manual, tag: 'manual' }]);
+      settled = true;
+    } else {
+      const url = R + pin + '/?' + Date.now();
+      pill('#pTok', 'token: fetching', 'warn');
+      log('fetching token for ' + pin + ' via ' + TRANSPORTS.length + ' routes…', 'inf');
+      const jobs = TRANSPORTS.map((tr, i) => sleep(i * 55).then(async () => {
+        try {
+          const res = await runTransport(tr, url, pin);
+          log('fetch ok ' + tr.n + ' (' + String(res.text || '').length + 'b' + (res.header ? '+hdr' : '') + ')', 'ok');
+          add(buildCandidates(res.text, res.header));
+        } catch(e){ log('fetch fail ' + tr.n + ': ' + (e && e.name === 'AbortError' ? 'timeout' : e.message), 'warn'); }
+      }));
+      await Promise.all(jobs);
+      settled = true;
+    }
+
+    await drain;
+
+    if (winner){
+      EP = { host: ep.host, mode: ep.mode, scheme: ep.scheme };
+      LOCKED = winner.t;
+      S.set('ep', ep.scheme + '|' + ep.host + '|' + ep.mode);
+      pill('#pTok', 'token locked', 'ok');
+      pill('#pEp', ep.scheme + '://' + ep.host, 'ok');
+      $('#tokView').textContent = winner.t.slice(0, 40) + '…  [' + winner.t.length + ']';
+      log('TOKEN LOCKED on ' + ep.scheme + '://' + ep.host + ' [' + ep.mode + ']', 'ok');
+      banner('');
+      return winner.t;
+    }
+
+    for (let i = 0; i < 4; i++){
+      const v = VARIANTS[i % VARIANTS.length];
+      const r = await probe(pin, rnd(12), v, 5000);
+      log('random ' + v.tag + ' → ' + (r.ok ? 'OK' : r.why), r.ok ? 'ok' : 'l');
+      if (r.ok){ LOCKED = null; EP = { host: v.host, mode: v.mode, scheme: v.scheme }; pill('#pTok', 'random ok', 'warn'); return rnd(12); }
+    }
+    throw new Error('no token route worked');
+  } finally { RESOLVING = false; }
+}
+
+/* ===================== player ===================== */
+let players = [], solo = null, autoSolo = true, armOn = false, qSeen = false;
+const SHAPES = ['▲', '◆', '●', '■'];
+
+class Player {
+  constructor(pin, name, token, on){
+    this.pin = pin; this.name = name; this.token = token; this.on = on || {};
+    this.n = 1; this.clientId = null; this.joined = false; this.dead = false;
+    this.qid = null; this.qnum = 0; this.answers = null; this.answered = false;
+  }
+  id(){ return String(this.n++); }
+  send(o){ if (this.ws && this.ws.readyState === 1){ o.clientId = this.clientId; this.ws.send(JSON.stringify([o])); } }
+  connect(){
+    return new Promise((res, rej) => {
+      const url = wsUrl(this.pin, this.token);
+      let ws;
+      try { ws = new WebSocket(url); }
+      catch(e){ return rej(new Error('ctor ' + (e && e.message || e) + ' [' + url + ']')); }
+      this.ws = ws;
+      const tm = setTimeout(() => rej(new Error('ws timeout')), 15000);
+      ws.onopen = () => this.send({ channel:'/meta/handshake', version:'1.0', minimumVersion:'1.0',
+        supportedConnectionTypes:['websocket','long-polling'], advice:{ timeout:60000, interval:0 },
+        ext:{ ack:true, timesync:true }, id:this.id() });
+      ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch(e){ return; }
+        (Array.isArray(m) ? m : [m]).forEach(x => this.handle(x, res, rej, tm)); };
+      ws.onerror = () => {};
+      ws.onclose = () => { this.dead = true; this.on.close && this.on.close(this); };
+    });
+  }
+  handle(m, res, rej, tm){
+    if (!m) return;
+    if (m.channel === '/meta/handshake'){
+      if (!m.successful){ clearTimeout(tm); return rej(new Error('handshake: ' + (m.error || '?'))); }
+      this.clientId = m.clientId;
+      this.send({ channel:'/meta/subscribe', subscription:'/service/controller', id:this.id() });
+      this.send({ channel:'/meta/subscribe', subscription:'/service/player', id:this.id() });
+      this.send({ channel:'/meta/connect', connectionType:'websocket', id:this.id() });
+      this.send({ channel:'/service/controller', id:this.id(), data:{
+        type:'login', gameid:this.pin, host:'kahoot.it', name:this.name,
+        content: JSON.stringify({ device:{ userAgent:navigator.userAgent, screen:{ width:1920, height:1080 } },
+                                  userAgent:navigator.userAgent }) } });
+      clearTimeout(tm); res(this); return;
+    }
+    if (m.channel === '/meta/connect' && m.successful){
+      setTimeout(() => { if (!this.dead) this.send({ channel:'/meta/connect', connectionType:'websocket', id:this.id() }); }, 200);
+      return;
+    }
+    if (m.channel === '/meta/subscribe' || m.channel === '/meta/disconnect') return;
+
+    const d = m.data || {};
+    let c = d.content;
+    if (typeof c === 'string'){ try { c = JSON.parse(c); } catch(e){ c = null; } }
+
+    if (d.type === 'login_response'){
+      if (d.error) this.on.fail && this.on.fail(this, d.error);
+      else { this.joined = true; this.on.join && this.on.join(this, d); }
+      return;
+    }
+    if (d.type === 'question_start'){
+      this.qid = d.id; this.qnum = (c && c.questionIndex) || 0;
+      this.answers = c && c.quizQuestionAnswers; this.answered = false;
+      this.on.question && this.on.question(this, c, d);
+      if ($('#auto').checked){
+        const acc = +$('#acc').value;
+        if (Math.random() * 100 <= acc) setTimeout(() => this.autoAnswer(), +$('#delay').value);
+      }
+      return;
+    }
+    if (d.type === 'answer_reveal' || d.type === 'question_end' || d.type === 'game_over' || d.type === 'quiz_end')
+      this.on.event && this.on.event(this, d.type, c);
+  }
+  autoAnswer(){
+    if (this.answered || !this.qid) return;
+    let i = 0;
+    if (this.answers && this.answers.length){
+      let best = -1; this.answers.forEach((v, n) => { if (v > best){ best = v; i = n; } });
+    } else i = Math.floor(Math.random() * 4);
+    this.answer(i);
+  }
+  answer(i){
+    if (!this.qid || this.answered) return;
+    this.answered = true;
+    this.send({ channel:'/service/controller', id:this.id(), data:{ type:'message', gameid:this.pin, host:'kahoot.it', id:this.qid,
+      content: JSON.stringify({ type:'quiz', choice:i, questionIndex:this.qnum,
+        meta:{ lag:10, device:{ userAgent:navigator.userAgent, screen:{ width:1920, height:1080 } } } }) } });
+    this.on.answer && this.on.answer(this, i);
+  }
+  blast(text){
+    this.send({ channel:'/service/controller', id:this.id(), data:{ type:'message', gameid:this.pin, host:'kahoot.it', id:this.qid || 1,
+      content: JSON.stringify({ type:'message', message:text }) } });
+  }
+  raw(channel, data){ this.send({ channel, id:this.id(), data }); }
+  close(){ this.dead = true; try { this.ws.close(); } catch(e){} }
+}
+
+/* ===================== live view ===================== */
+function renderQuestion(c){
+  if (!c) return;
+  $('#qIdx').textContent = (c.questionIndex ?? 0) + 1;
+  $('#qText').textContent = c.question || '';
+  const box = $('#answers'); box.innerHTML = '';
+  (c.answers || []).forEach((a, i) => {
+    const b = document.createElement('div');
+    b.className = 'ans g' + i;
+    b.innerHTML = '<span class="sh">' + SHAPES[i] + '</span><span>' + (i + 1) + '. ' +
+      String(a.answer || '').replace(/</g, '&lt;') + '</span>';
+    b.onclick = () => { players.forEach(p => { p.answered = false; p.answer(i); }); b.classList.add('hit'); };
+    box.appendChild(b);
+  });
+  const k = (c.answers || []).findIndex(a => a.correct);
+  if (k >= 0 && !$('#auto').checked) box.children[k] && box.children[k].classList.add('hit');
+  if ($('#tts').checked && c.question){ try { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(c.question)); } catch(e){} }
+  beep(880, 0.12);
+  const secs = c.time || 20, started = Date.now();
+  clearInterval(renderQuestion._t);
+  renderQuestion._t = setInterval(() => {
+    const left = secs - (Date.now() - started) / 1000;
+    $('#qTime').textContent = left > 0 ? left.toFixed(1) + 's' : '–';
+    $('#qBar').style.width = Math.max(0, Math.min(100, left / secs * 100)) + '%';
+    if (left <= 0) clearInterval(renderQuestion._t);
+  }, 100);
+}
+function revealCorrect(choices){
+  const box = $('#answers');
+  Array.from(box.children).forEach((b, i) => {
+    if (choices && choices.indexOf(i) >= 0) b.classList.add('hit');
+    else if (choices) b.classList.add('miss');
+  });
+  beep(1180, 0.1);
+}
+
+/* ===================== actions ===================== */
+const pinOk = p => /^\d{5,9}$/.test(p);
+const pinVal = () => $('#pin').value.trim();
+function tickPills(){
+  const live = players.filter(p => p.ws && p.ws.readyState === 1).length;
+  pill('#pSock', live + ' sockets', live ? 'ok' : '');
+}
+setInterval(tickPills, 600);
+
+$('#pin').addEventListener('input', () => { $('#pin').value = $('#pin').value.replace(/\D/g, ''); S.set('pin', $('#pin').value); });
+$('#nick').addEventListener('input', () => S.set('nick', $('#nick').value));
+
+$('#pin').value = S.get('pin', '');
+$('#nick').value = S.get('nick', 'venice');
+$('#count').value = S.get('count', '20');
+$('#cntv').textContent = $('#count').value;
+$('#cntv2').textContent = $('#count').value;
+$('#count').addEventListener('input', () => {
+  $('#cntv').textContent = $('#count').value;
+  $('#cntv2').textContent = $('#count').value;
+  S.set('count', $('#count').value);
+});
+$$('[data-step]').forEach(b => b.onclick = () => {
+  const v = Math.max(1, Math.min(120, (+$('#count').value) + (+b.dataset.step)));
+  $('#count').value = v; $('#count').dispatchEvent(new Event('input'));
+});
+
+const savedEp = S.get('ep', '');
+if (savedEp){ const [sc, h, m] = savedEp.split('|'); if (sc && h && m){ EP = { scheme: sc, host: h, mode: m }; pill('#pEp', sc + '://' + h, 'ok'); } }
+
+$('#acc').addEventListener('input', () => $('#accv').textContent = $('#acc').value + '%');
+$('#delay').addEventListener('input', () => $('#dlv').textContent = $('#delay').value + ' ms');
+
+function soloOpts(){
+  return {
+    join: (pl, d) => {
+      log('JOINED as "' + pl.name + '"', 'ok');
+      pill('#pTok', 'in game', 'ok');
+      banner('You are in as ' + pl.name + '.', 'ok');
+      beep(660, 0.12);
+    },
+    fail: (pl, e) => log('login rejected: ' + e, 'err'),
+    question: (pl, c) => {
+      renderQuestion(c);
+      const a = (c && c.quizQuestionAnswers) || [];
+      let k = 0; a.forEach((v, n) => { if (v > a[k]) k = n; });
+      log('Q' + ((c.questionIndex || 0) + 1) + ' correct=' + 'ABCD'[k] + ' ' + JSON.stringify(a), 'mag');
+    },
+    event: (pl, t, c) => {
+      if (t === 'answer_reveal' && c) revealCorrect(c.correctChoices);
+      if (t === 'game_over'){ log('game over', 'ok'); banner('Game over.', 'ok'); }
+      if (t === 'question_end') clearInterval(renderQuestion._t);
+    },
+    answer: (pl, i) => { if (pl === solo) log('answered ' + 'ABCD'[i], 'inf'); },
+    close: () => {}
+  };
+}
+
+async function armJoin(){
+  const p = pinVal();
+  if (!pinOk(p)) return banner('Enter a 5-9 digit game PIN first.', 'warn');
+  stopAll(); armOn = true;
+  banner('Connecting… if the lobby is not open yet it will keep retrying.', 'warn');
+  pill('#pTok', 'arming', 'warn');
+  let tries = 0;
+  while (armOn){
+    try {
+      const tk = await resolveToken(p, $('#tok').value.trim() || null);
+      if (!armOn) return;
+      solo = new Player(p, $('#nick').value.trim() || 'venice', tk, soloOpts());
+      players.push(solo);
+      await solo.connect();
+      solo.on.close = () => { if (!solo.dead && armOn) { log('socket dropped — reconnecting', 'warn'); armJoin(); } };
+      return;
+    } catch(e){
+      tries++;
+      log('attempt ' + tries + ': ' + e.message, 'warn');
+      banner('Not in yet — ' + (tries < 3 ? 'game may not be live. Retrying…' : 'retrying every 3s (school wifi? try Socket test)'), 'warn');
+      await sleep(3000);
+    }
+  }
+}
+$('#join').onclick = armJoin;
+
+async function swarm(){
+  const p = pinVal();
+  if (!pinOk(p)) return banner('Enter a PIN first.', 'warn');
+  stopAll(); armOn = false;
+  const n = Math.max(1, Math.min(120, +$('#count').value));
+  const base = ($('#nick').value.trim() || 'bot').slice(0, 10);
+  pill('#pTok', 'arming', 'warn');
+  let tk;
+  try { tk = await resolveToken(p, $('#tok').value.trim() || null); }
+  catch(e){ banner('Swarm aborted: ' + e.message, 'bad'); return log('swarm aborted: ' + e.message, 'err'); }
+  banner('Spawning ' + n + ' bots…', 'warn');
+  let ok = 0, bad = 0;
+  const jobs = [];
+  for (let i = 0; i < n; i++){
+    await sleep(12);
+    const name = $('#uniq').checked ? base + i : base;
+    const pl = new Player(p, name, tk, {
+      join: () => { ok++; tickPills(); if (ok % 10 === 0) log('bots in ' + ok + '/' + n, 'ok'); },
+      fail: (x, e) => log('bot rejected: ' + e, 'warn')
+    });
+    players.push(pl);
+    jobs.push(pl.connect().catch(e => { bad++; if (bad <= 3) log('bot fail: ' + e.message, 'err'); }));
+  }
+  await Promise.all(jobs);
+  log('swarm done — ' + ok + ' in, ' + bad + ' failed', ok ? 'ok' : 'err');
+  banner(ok ? ok + ' bots are in the game.' : 'No bots joined.', ok ? 'ok' : 'bad');
+}
+$('#swarm').onclick = swarm;
+$('#swarm2').onclick = swarm;
+
+async function boot(times){
+  const p = pinVal();
+  if (!pinOk(p)) return banner('Enter a PIN first.', 'warn');
+  const name = ($('#target').value.trim() || $('#nick').value.trim() || 'venice').slice(0, 15);
+  let tk = LOCKED;
+  if (!tk){ try { tk = await resolveToken(p, $('#tok').value.trim() || null); } catch(e){ return log('boot aborted: ' + e.message, 'err'); } }
+  log('booting "' + name + '" ×' + times, 'inf');
+  for (let i = 0; i < times; i++){
+    const pl = new Player(p, name, tk, {
+      join: () => { log('booted as ' + name, 'ok'); tickPills(); },
+      fail: (x, e) => log('boot rejected: ' + e, 'warn')
+    });
+    players.push(pl);
+    pl.connect().catch(e => log('boot fail: ' + e.message, 'err'));
+    await sleep(150);
+  }
+  banner('Booted ' + name + ' ×' + times + '.', 'ok');
+}
+$('#boot1').onclick = () => boot(1);
+$('#boot5').onclick = () => boot(5);
+$('#boot20').onclick = () => boot(20);
+
+$('#rejoin').onclick = () => {
+  const dead = players.filter(p => !p.joined);
+  dead.forEach(p => { p.dead = false; p.connect().catch(() => {}); });
+  log('rejoining ' + dead.length, 'inf');
+};
+
+function stopAll(){
+  armOn = false;
+  players.forEach(p => p.close());
+  players = []; solo = null;
+  clearInterval(renderQuestion._t);
+  $('#qText').textContent = 'waiting for a game…';
+  $('#qIdx').textContent = '–'; $('#qTime').textContent = '–'; $('#qBar').style.width = '0';
+  $('#answers').innerHTML = '';
+  tickPills(); pill('#pTok', 'token idle');
+  log('stopped', 'warn');
+}
+$('#stop').onclick = () => { stopAll(); banner(''); };
+
+$('#fc').onclick = () => players.forEach(p => { p.answered = false; p.autoAnswer(); });
+$('#fr').onclick = () => players.forEach(p => { p.answered = false; p.answer(Math.floor(Math.random() * 4)); });
+
+function doBlast(t){ if (!t) return; players.forEach(p => p.blast(t)); log('blast → "' + t + '" ×' + players.length, 'mag'); }
+$('#blastGo').onclick = () => doBlast($('#blast').value.trim());
+$('#blast5').onclick = async () => { for (let i = 0; i < 5; i++){ doBlast($('#blast').value.trim()); await sleep(220); } };
+$('#blast20').onclick = async () => { for (let i = 0; i < 20; i++){ doBlast($('#blast').value.trim()); await sleep(150); } };
+$$('[data-b]').forEach(b => b.onclick = () => doBlast(b.dataset.b));
+
+$('#chaos').onclick = async () => {
+  const t = $('#blast').value.trim() || 'venice was here';
+  beep(440, 0.2, 'square');
+  if (!$('#ytw').innerHTML) $('#ytPlay').click();
+  for (let i = 0; i < 8; i++){ doBlast(t); await sleep(170); }
+  players.forEach(p => { p.answered = false; p.answer(Math.floor(Math.random() * 4)); });
+  banner('Chaos deployed.', 'ok');
+  log('chaos', 'mag');
+};
+
+function ytId(s){
+  s = String(s || '').trim();
+  const m = s.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : (/^[A-Za-z0-9_-]{6,}$/.test(s) ? s : null);
+}
+$('#ytPlay').onclick = () => {
+  const id = ytId($('#yt').value); if (!id) return log('bad youtube id', 'warn');
+  const w = $('#ytw'); w.innerHTML = '';
+  const f = document.createElement('iframe');
+  f.setAttribute('allow', 'autoplay; encrypted-media');
+  f.setAttribute('allowfullscreen', '');
+  f.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&controls=0&rel=0' + ($('#ytLoop').checked ? '&loop=1&playlist=' + id : '');
+  w.appendChild(f);
+  log('youtube ' + id, 'ok');
+};
+$('#ytStop').onclick = () => { $('#ytw').innerHTML = ''; };
+
+$('#rgo').onclick = () => {
+  let data; try { data = JSON.parse($('#rdata').value); } catch(e){ return log('raw bad json: ' + e.message, 'err'); }
+  players.forEach(p => p.raw($('#rchan').value, data));
+  log('published raw ×' + players.length, 'mag');
+};
+
+$('#wstest').onclick = wsTest;
+$('#diag').onclick = async () => {
+  const p = pinVal();
+  if (!pinOk(p)) return banner('Enter a PIN first.', 'warn');
+  try { const tk = await resolveToken(p, $('#tok').value.trim() || null); banner('Link works. ' + tk.length + ' char token accepted. Hit Join.', 'ok'); }
+  catch(e){ banner('Diagnose failed: ' + e.message, 'bad'); log('DIAGNOSE: ' + e.message, 'err'); }
+};
+$('#tokClear').onclick = () => { $('#tok').value = ''; $('#tokView').textContent = ''; log('token box cleared', 'warn'); };
+
+$('#copy').onclick = () => {
+  const pr = (navigator.clipboard && navigator.clipboard.writeText(logEl.innerText)) || Promise.reject();
+  pr.then(() => log('copied', 'ok')).catch(() => log('clipboard blocked', 'warn'));
+};
+$('#clr').onclick = () => { logEl.innerHTML = ''; };
+
+$$('.tabbar button').forEach(b => b.onclick = () => {
+  $$('.tabbar button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+  $$('.page').forEach(p => p.classList.toggle('on', p.id === 'page-' + b.dataset.tab));
+});
+
+/* ===================== boot ===================== */
+log('ready. type a PIN, tap Join.', 'ok');
+pill('#pTok', 'token idle');
+wsTest();
+</script>
+</body>
+</html>
