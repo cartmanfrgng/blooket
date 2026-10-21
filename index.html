@@ -1,78 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Blooket Hijack – Undetectable</title>
-<style>
-:root { --bg:#F2F2F7; --card:#FFF; --label:#000; --blue:#007AFF; --red:#FF3B30; --green:#34C759; --orange:#FF9500; }
-@media (prefers-color-scheme: dark) { :root { --bg:#000; --card:#1C1C1E; --label:#FFF; } }
-* { box-sizing:border-box; }
-body { margin:0; font:17px/1.35 system-ui, sans-serif; background:var(--bg); color:var(--label); padding:16px; }
-.app { max-width:600px; margin:0 auto; }
-.card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:16px; }
-input, button { width:100%; padding:12px; border-radius:10px; border:none; font:inherit; margin-bottom:8px; }
-input { background:rgba(120,120,128,0.16); }
-button { background:var(--blue); color:#fff; font-weight:600; cursor:pointer; }
-button.red { background:var(--red); }
-button.green { background:var(--green); }
-button.orange { background:var(--orange); }
-.row { display:flex; gap:8px; }
-.pill { display:inline-block; padding:2px 8px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(120,120,128,0.16); margin-bottom:12px; }
-.pill.ok { background:rgba(52,199,89,0.2); color:#248A3D; }
-.pill.bad { background:rgba(255,59,48,0.2); color:#D70015; }
-#playerList { margin-top:10px; }
-.player-item { display:flex; align-items:center; padding:8px 0; border-bottom:1px solid rgba(120,120,128,0.2); }
-.player-item img { width:32px; height:32px; border-radius:8px; margin-right:10px; background:var(--bg); }
-.player-item .name { flex:1; }
-.player-item .kick-btn { background:var(--red); color:#fff; border:none; padding:4px 12px; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; }
-.qcard { background:var(--card); border-radius:12px; padding:12px; margin-bottom:12px; }
-.answers { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.ans { padding:12px; border-radius:8px; color:#fff; font-weight:600; cursor:pointer; }
-.ans:nth-child(1) { background:#E21B3C; }
-.ans:nth-child(2) { background:#1368CE; }
-.ans:nth-child(3) { background:#D89E00; }
-.ans:nth-child(4) { background:#26890C; }
-.ans.hit { outline:3px solid var(--green); outline-offset:2px; }
-.log { background:var(--card); border-radius:12px; padding:10px; height:200px; overflow-y:auto; font:12px monospace; white-space:pre-wrap; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Blooket Hijack – God Mode</title>
+  <style>
+    :root { --bg:#F2F2F7; --card:#FFF; --label:#000; --blue:#007AFF; --red:#FF3B30; --green:#34C759; --orange:#FF9500; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#000; --card:#1C1C1E; --label:#FFF; } }
+    * { box-sizing:border-box; }
+    body { margin:0; font:17px/1.35 system-ui, sans-serif; background:var(--bg); color:var(--label); padding:16px; }
+    .app { max-width:600px; margin:0 auto; }
+    .card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:16px; }
+    input, button, select { width:100%; padding:12px; border-radius:10px; border:none; font:inherit; margin-bottom:8px; }
+    input[type="range"] { padding:0; }
+    input { background:rgba(120,120,128,0.16); }
+    button { background:var(--blue); color:#fff; font-weight:600; cursor:pointer; }
+    button.red { background:var(--red); }
+    button.green { background:var(--green); }
+    button.orange { background:var(--orange); }
+    .row { display:flex; gap:8px; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(120,120,128,0.16); margin-bottom:12px; }
+    .pill.ok { background:rgba(52,199,89,0.2); color:#248A3D; }
+    .pill.bad { background:rgba(255,59,48,0.2); color:#D70015; }
+    #playerList { margin-top:10px; }
+    .player-item { display:flex; align-items:center; padding:8px 0; border-bottom:1px solid rgba(120,120,128,0.2); }
+    .player-item img { width:32px; height:32px; border-radius:8px; margin-right:10px; background:var(--bg); }
+    .player-item .name { flex:1; }
+    .player-item .kick-btn { background:var(--red); color:#fff; border:none; padding:4px 12px; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; }
+    .log { background:var(--card); border-radius:12px; padding:10px; height:200px; overflow-y:auto; font:12px monospace; white-space:pre-wrap; }
+    .presets img { width:36px; height:36px; border-radius:8px; margin:3px; cursor:pointer; border:2px solid transparent; }
+    .presets img.selected { border-color:var(--blue); }
+  </style>
 </head>
 <body>
 <div class="app">
-<h1 style="margin-bottom:8px">Blooket Hijack</h1>
-<div id="statusPill" class="pill">idle</div>
-<div class="card">
-<input id="pin" placeholder="Game ID (e.g. 123456)" maxlength="9">
-<input id="nick" maxlength="15" placeholder="Your nickname" value="venice">
-<div class="row">
-<button id="joinBtn">Join as me</button>
-<button id="swarmBtn">Swarm 10</button>
-</div>
-<div class="row">
-<button id="stopBtn" class="red">Stop</button>
-<button id="diagBtn">Diagnose</button>
-</div>
-</div>
-<div id="playerList" class="card" style="display:none">
-<h3>Players</h3>
-<div id="playerContainer"></div>
-</div>
-<div class="row" style="margin-bottom:8px">
-<button id="blastBtn" class="orange">Blast Chat</button>
-<button id="chaosBtn" class="orange">Chaos</button>
-</div>
-<div class="card">
-<h3>Log</h3>
-<div class="log" id="log">Ready.</div>
-</div>
+  <h1 style="margin-bottom:8px">Blooket Hijack</h1>
+  <div id="statusPill" class="pill">idle</div>
+
+  <!-- Game -->
+  <div class="card">
+    <input id="gameId" placeholder="Game ID (e.g. 123456)" maxlength="9" inputmode="numeric">
+    <input id="nick" maxlength="30" placeholder="Your nickname" value="venice">
+    <div class="row" style="margin-bottom:8px">
+      <button id="joinBtn">Join as me</button>
+      <button id="swarmBtn">Swarm 50 bots</button>
+    </div>
+    <hr>
+    <label style="font-weight:600">Avatar / Skin</label>
+    <input id="avatarUrl" placeholder="Avatar image URL (leave empty for default)">
+    <div class="presets" id="avatarPresets">
+      <img src="https://cdn.iconscout.com/icon/free/png-512/emoji-1-453700.png" data-url="https://cdn.iconscout.com/icon/free/png-512/emoji-1-453700.png">
+      <img src="https://cdn.iconscout.com/icon/free/png-512/emoji-2-453701.png" data-url="https://cdn.iconscout.com/icon/free/png-512/emoji-2-453701.png">
+      <img src="https://cdn.iconscout.com/icon/free/png-512/emoji-3-453702.png" data-url="https://cdn.iconscout.com/icon/free/png-512/emoji-3-453702.png">
+      <img src="https://cdn.iconscout.com/icon/free/png-512/emoji-4-453703.png" data-url="https://cdn.iconscout.com/icon/free/png-512/emoji-4-453703.png">
+    </div>
+  </div>
+
+  <!-- Bot settings -->
+  <div class="card">
+    <h3>Bot Swarm</h3>
+    <label>Bot count: <span id="botCountLabel">50</span></label>
+    <input type="range" id="botCount" min="1" max="200" value="50">
+    <div class="row">
+      <label style="flex:1">Human delay</label>
+      <input type="checkbox" id="humanDelay" checked onchange="document.getElementById('delayVal').style.display=this.checked?'inline':'none'">
+    </div>
+    <span id="delayVal">(60-300ms between bots)</span>
+    <hr>
+    <button id="swarmCustom">Spawn custom count</button>
+    <button class="red" id="stopBtn">Stop all</button>
+  </div>
+
+  <!-- Player list & Kick -->
+  <div id="playerList" class="card" style="display:none">
+    <h3>Players in lobby</h3>
+    <div id="playerContainer"></div>
+  </div>
+
+  <!-- Messaging -->
+  <div class="card">
+    <h3>Chat Spam</h3>
+    <input id="spamMsg" placeholder="Message to blast" value="Owned by EvilGPT">
+    <div class="row">
+      <button class="orange" id="blastBtn">Blast once</button>
+      <button class="orange" id="chaosBtn">Chaos (8x)</button>
+    </div>
+  </div>
+
+  <!-- Auto-answer -->
+  <div class="card">
+    <h3>Auto Answer</h3>
+    <div class="row">
+      <label style="flex:1">Enable</label>
+      <input type="checkbox" id="autoAnswer" checked>
+    </div>
+    <label>Accuracy: <span id="accLabel">70%</span></label>
+    <input type="range" id="accuracy" min="0" max="100" value="70">
+    <p style="font-size:12px;color:var(--label2)">Chooses the most popular answer or random.</p>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <h3>Log</h3>
+    <div class="log" id="log">Ready.</div>
+  </div>
 </div>
 
 <script>
-// ========== YOUR WORKER URL ==========
-const WORKER = 'https://blooket-relay.therizzlerismetotally.workers.dev/'; // CHANGE THIS
+// ========== YOUR WORKER (same as before) ==========
+const WORKER = 'https://blooket-relay.therizzlerismetotally.workers.dev'; // use yours
 
+// DOM
 const logEl = document.getElementById('log');
 const statusPill = document.getElementById('statusPill');
+const playerContainer = document.getElementById('playerContainer');
+const playerListDiv = document.getElementById('playerList');
+const botCountLabel = document.getElementById('botCountLabel');
+const accLabel = document.getElementById('accLabel');
+
 function log(msg) {
   const d = new Date;
   const time = `${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
@@ -84,31 +129,24 @@ function status(txt, kind) {
   statusPill.className = 'pill ' + (kind || '');
 }
 
-// ========== BLOOKET DECODER ==========
-function decodeChallenge(challengeStr) {
-  const msgMatch = challengeStr.match(/decode\.call\(this\s*,\s*'([^']*)'/);
-  const message = msgMatch ? msgMatch[1] : '';
-  if (!message) throw new Error('No message in decode.call');
-
-  // Remove all whitespace
-  const compact = challengeStr.replace(/\s+/g, '');
-  const offsetMatch = compact.match(/var\s*offset\s*=\s*([^;]+);/);
-  let offset;
-  if (offsetMatch) {
-    try { offset = Function('return (' + offsetMatch[1] + ')')(); } catch(e) { offset = 0; }
-  } else {
-    offset = 0;
+// Avatar presets
+document.getElementById('avatarPresets').addEventListener('click', e => {
+  if (e.target.tagName === 'IMG') {
+    const url = e.target.dataset.url;
+    document.getElementById('avatarUrl').value = url;
+    document.querySelectorAll('.presets img').forEach(img => img.classList.remove('selected'));
+    e.target.classList.add('selected');
   }
-  log('Decoded offset = ' + offset);
+});
+// Range labels
+document.getElementById('botCount').addEventListener('input', () => {
+  botCountLabel.textContent = document.getElementById('botCount').value;
+});
+document.getElementById('accuracy').addEventListener('input', () => {
+  accLabel.textContent = document.getElementById('accuracy').value + '%';
+});
 
-  let decoded = '';
-  for (let i = 0; i < message.length; i++) {
-    const c = message.charCodeAt(i);
-    decoded += String.fromCharCode(((c * i + offset) % 77) + 48);
-  }
-  return decoded;
-}
-
+// ========== BLOOKET SESSION / TOKEN ==========
 async function fetchSession(gameId) {
   const url = `${WORKER}?url=${encodeURIComponent('https://play.blooket.com/reserve/session/' + gameId + '?_=' + Date.now())}`;
   const res = await fetch(url, { cache: 'no-store' });
@@ -125,6 +163,26 @@ async function fetchSession(gameId) {
   return { header, challenge };
 }
 
+function decodeChallenge(challengeStr) {
+  const msgMatch = challengeStr.match(/decode\.call\(this\s*,\s*'([^']*)'/);
+  const message = msgMatch ? msgMatch[1] : '';
+  if (!message) throw new Error('No message in decode.call');
+  const compact = challengeStr.replace(/\s+/g, '');
+  const offsetMatch = compact.match(/var\s*offset\s*=\s*([^;]+);/);
+  let offset;
+  if (offsetMatch) {
+    try { offset = Function('return (' + offsetMatch[1] + ')')(); } catch(e) { offset = 0; }
+  } else {
+    offset = 0;
+  }
+  let decoded = '';
+  for (let i = 0; i < message.length; i++) {
+    const c = message.charCodeAt(i);
+    decoded += String.fromCharCode(((c * i + offset) % 77) + 48);
+  }
+  return decoded;
+}
+
 function buildToken(header, challenge) {
   const decodedChallenge = decodeChallenge(challenge);
   const hdr = atob(header.replace(/-/g,'+').replace(/_/g,'/'));
@@ -135,19 +193,18 @@ function buildToken(header, challenge) {
   return token;
 }
 
-// ========== PLAYER (BLOOKET PROTOCOL) ==========
+// ========== CONNECTION ==========
 let sockets = [];
 let running = false;
 let playerListData = [];
 
 function renderPlayerList() {
-  const container = document.getElementById('playerContainer');
   if (!playerListData.length) {
-    document.getElementById('playerList').style.display = 'none';
+    playerListDiv.style.display = 'none';
     return;
   }
-  document.getElementById('playerList').style.display = 'block';
-  container.innerHTML = playerListData.map(p => `
+  playerListDiv.style.display = 'block';
+  playerContainer.innerHTML = playerListData.map(p => `
     <div class="player-item">
       <img src="${p.avatar || ''}" onerror="this.style.display='none'" alt="">
       <span class="name">${p.name}</span>
@@ -160,20 +217,19 @@ function renderPlayerList() {
 }
 
 function kickPlayer(name) {
-  if (!sockets[0]) { log('You need to be in the game first'); return; }
+  if (!sockets.length) { log('No connection'); return; }
   const ws = sockets[0];
-  if (ws.readyState !== 1) { log('Socket not open'); return; }
-  ws.send(JSON.stringify([{ channel:'/service/controller', id: String(Math.random()), data:{ type:'kick', name }}]));
+  if (ws.readyState !== 1) return;
+  ws.send(JSON.stringify([{ channel:'/service/controller', id: Date.now().toString(), data:{ type:'kick', name }}]));
   log(`Kicked ${name}`);
 }
 
-function connectBot(gameId, name, token) {
+function connectBot(gameId, name, token, avatarUrl) {
   return new Promise((resolve, reject) => {
     const url = `wss://play.blooket.com/cometd/${gameId}/${encodeURIComponent(token)}`;
     const ws = new WebSocket(url);
     let resolved = false;
     let clientId = null;
-
     const done = (ok, errMsg) => {
       if (resolved) return;
       resolved = true;
@@ -181,13 +237,12 @@ function connectBot(gameId, name, token) {
       if (ok) resolve(ws);
       else reject(new Error(errMsg));
     };
-
     const timeout = setTimeout(() => done(false, 'timeout'), 15000);
 
     ws.onopen = () => {
       ws.send(JSON.stringify([{ channel:'/meta/handshake', version:'1.0', minimumVersion:'1.0',
         supportedConnectionTypes:['websocket','long-polling'], advice:{ timeout:60000, interval:0 },
-        ext:{ ack:true, timesync:true }, id:'1' }]));
+        ext:{ ack:true, timesync:true }, id: '1' }]));
     };
 
     ws.onmessage = (ev) => {
@@ -201,21 +256,40 @@ function connectBot(gameId, name, token) {
           ws.send(JSON.stringify([{ channel:'/meta/subscribe', subscription:'/service/controller', id:'2' }]));
           ws.send(JSON.stringify([{ channel:'/meta/subscribe', subscription:'/service/player', id:'3' }]));
           ws.send(JSON.stringify([{ channel:'/meta/connect', connectionType:'websocket', id:'4' }]));
-          ws.send(JSON.stringify([{ channel:'/service/controller', id:'5', data:{
+          const loginData = {
             type:'login', gameid: gameId, host:'play.blooket.com', name: name,
             content: JSON.stringify({
               device: { userAgent: navigator.userAgent, screen: { width: screen.width, height: screen.height } }
             })
-          }}]));
+          };
+          if (avatarUrl) loginData.avatar = avatarUrl;   // Skin changer
+          ws.send(JSON.stringify([{ channel:'/service/controller', id:'5', data: loginData }]));
         }
         else if (m.data && m.data.type === 'login_response') {
           if (m.data.error) { done(false, `login: ${m.data.error}`); return; }
           done(true);
         }
-        else if (m.data && m.data.type === 'playerlist') {
-          const pl = (m.data.players || []);
-          playerListData = pl;
+        else if (m.data && (m.data.type === 'playerlist' || m.data.type === 'playerList')) {
+          const pl = m.data.players || [];
+          playerListData = pl.map(p => ({ name: p.name, avatar: p.avatar || '' }));
           renderPlayerList();
+        }
+        else if (m.data && m.data.type === 'question_start') {
+          // Auto-answer
+          if (document.getElementById('autoAnswer').checked && ws === sockets[0]) {
+            const answers = (m.data.content && JSON.parse(m.data.content).quizQuestionAnswers) || [];
+            const accuracy = parseInt(document.getElementById('accuracy').value);
+            if (Math.random() * 100 < accuracy) {
+              let bestIdx = 0;
+              answers.forEach((v,i)=>{ if(v > answers[bestIdx]) bestIdx = i; });
+              setTimeout(() => {
+                ws.send(JSON.stringify([{ channel:'/service/controller', id: Date.now().toString(), data:{
+                  type:'message', gameid: gameId, host:'play.blooket.com', id: m.data.id,
+                  content: JSON.stringify({ type:'quiz', choice: bestIdx, questionIndex: m.data.content && JSON.parse(m.data.content).questionIndex })
+                }}]));
+              }, Math.random() * 2000 + 500);
+            }
+          }
         }
       }
     };
@@ -235,10 +309,11 @@ function stopAll() {
   log('Stopped.');
 }
 
-// ========== UI ==========
+// ========== UI ACTIONS ==========
 document.getElementById('joinBtn').addEventListener('click', async () => {
-  const gameId = document.getElementById('pin').value.trim();
+  const gameId = document.getElementById('gameId').value.trim();
   const nick = document.getElementById('nick').value.trim();
+  const avatar = document.getElementById('avatarUrl').value.trim();
   if (!/^\d{5,9}$/.test(gameId)) { log('Invalid Game ID'); return; }
   stopAll();
   running = true;
@@ -246,7 +321,7 @@ document.getElementById('joinBtn').addEventListener('click', async () => {
   try {
     const sess = await fetchSession(gameId);
     const token = buildToken(sess.header, sess.challenge);
-    const ws = await connectBot(gameId, nick, token);
+    const ws = await connectBot(gameId, nick, token, avatar);
     sockets.push(ws);
     status(`joined as ${nick}`, 'ok');
     log(`You are in!`);
@@ -256,9 +331,10 @@ document.getElementById('joinBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('swarmBtn').addEventListener('click', async () => {
-  const gameId = document.getElementById('pin').value.trim();
+async function swarm(count) {
+  const gameId = document.getElementById('gameId').value.trim();
   const base = document.getElementById('nick').value.trim().slice(0,8);
+  const human = document.getElementById('humanDelay').checked;
   if (!/^\d{5,9}$/.test(gameId)) { log('Invalid Game ID'); return; }
   stopAll();
   running = true;
@@ -266,67 +342,59 @@ document.getElementById('swarmBtn').addEventListener('click', async () => {
   try {
     const sess = await fetchSession(gameId);
     const token = buildToken(sess.header, sess.challenge);
-    status('spawning 10 bots…');
+    status(`spawning ${count} bots…`);
     let joined = 0;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < count; i++) {
       if (!running) break;
       const name = base + i;
       try {
-        const ws = await connectBot(gameId, name, token);
+        const avatar = document.getElementById('avatarUrl').value.trim();
+        const ws = await connectBot(gameId, name, token, avatar);
         sockets.push(ws);
         joined++;
-        status(`${joined}/10 bots in`, 'ok');
+        status(`${joined}/${count} bots in`, 'ok');
       } catch(e) {
         log(`bot ${i} fail: ${e.message}`);
       }
-      await new Promise(r => setTimeout(r, 60));
+      if (human) await new Promise(r => setTimeout(r, 60 + Math.random()*240));
+      else await new Promise(r => setTimeout(r, 20));
     }
     status(joined > 0 ? `${joined} bots joined` : 'all failed', joined > 0 ? 'ok' : 'bad');
   } catch(e) {
     status('abort', 'bad');
     log(`Error: ${e.message}`);
   }
-});
+}
 
+document.getElementById('swarmBtn').addEventListener('click', () => swarm(50));
+document.getElementById('swarmCustom').addEventListener('click', () => {
+  const cnt = parseInt(document.getElementById('botCount').value);
+  swarm(cnt);
+});
 document.getElementById('stopBtn').addEventListener('click', stopAll);
 
-document.getElementById('diagBtn').addEventListener('click', async () => {
-  const gameId = document.getElementById('pin').value.trim();
-  if (!/^\d{5,9}$/.test(gameId)) { log('Enter a valid Game ID first'); return; }
-  log('Testing worker…');
-  try {
-    const sess = await fetchSession(gameId);
-    log(`Worker returned header✅ and challenge✅`);
-    const token = buildToken(sess.header, sess.challenge);
-    log(`Token built (length ${token.length})`);
-    status('worker OK', 'ok');
-  } catch(e) {
-    log(`Worker test failed: ${e.message}`);
-    status('worker FAIL', 'bad');
-  }
-});
-
-document.getElementById('blastBtn').addEventListener('click', () => {
-  sockets.forEach(ws => {
-    if (ws.readyState === 1) {
-      ws.send(JSON.stringify([{ channel:'/service/controller', id: String(Math.random()), data:{
-        type:'message', content: JSON.stringify({ type:'message', message:'Blooket owned' })
-      }}]));
-    }
-  });
-  log('Blast sent');
-});
-
-document.getElementById('chaosBtn').addEventListener('click', () => {
-  for (let i = 0; i < 8; i++) {
+// Blast & Chaos
+function blast(msg, times) {
+  for (let i = 0; i < times; i++) {
     setTimeout(() => {
       sockets.forEach(ws => {
-        if (ws.readyState === 1) ws.send(JSON.stringify([{ channel:'/service/controller', id: String(Math.random()), data:{
-          type:'message', content: JSON.stringify({ type:'message', message:'CHAOS' })
-        }}]));
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify([{ channel:'/service/controller', id: Date.now().toString(), data:{
+            type:'message', content: JSON.stringify({ type:'message', message: msg })
+          }}]));
+        }
       });
     }, i * 200);
   }
+}
+document.getElementById('blastBtn').addEventListener('click', () => {
+  const msg = document.getElementById('spamMsg').value;
+  blast(msg, 1);
+  log('Blast sent');
+});
+document.getElementById('chaosBtn').addEventListener('click', () => {
+  const msg = document.getElementById('spamMsg').value;
+  blast(msg, 8);
   log('Chaos unleashed');
 });
 </script>
