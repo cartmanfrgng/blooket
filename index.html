@@ -1,114 +1,114 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
-<title>Kahoot Hijack v2</title>
-<style>
-:root{
-  --blue:#007AFF; --green:#34C759; --red:#FF3B30; --orange:#FF9500; --purple:#AF52DE;
-  --bg:#F2F2F7; --card:#FFFFFF; --sep:rgba(60,60,67,.22); --sep2:rgba(60,60,67,.12);
-  --label:#000; --label2:rgba(60,60,67,.62); --label3:rgba(60,60,67,.32);
-  --fill:rgba(120,120,128,.10); --fill2:rgba(120,120,128,.18);
-  --nav:rgba(249,249,249,.82); --bar:rgba(249,249,249,.86);
-  --a0:#E21B3C; --a1:#1368CE; --a2:#D89E00; --a3:#26890C;
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg:#000; --card:#1C1C1E; --sep:rgba(84,84,88,.55); --sep2:rgba(84,84,88,.32);
-    --label:#fff; --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
-    --fill:rgba(120,120,128,.20); --fill2:rgba(120,120,128,.32);
-    --nav:rgba(30,30,32,.82); --bar:rgba(30,30,32,.86);
-  }
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0}
-body{background:var(--bg);color:var(--label);
-  font:400 17px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Inter,system-ui,sans-serif;
-  min-height:100vh;letter-spacing:-.1px}
-.app{max-width:600px;margin:0 auto;padding-bottom:8px}
-.nav{position:sticky;top:0;z-index:20;background:var(--nav);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--sep);padding:12px 18px 11px}
-.nav h1{margin:0;font-size:27px;font-weight:700;letter-spacing:-.7px}
-.nav .sub{font-size:12px;color:var(--label2);margin-top:1px}
-.dots{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
-.pill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--fill);color:var(--label2);white-space:nowrap}
-.pill.ok{background:rgba(52,199,89,.16);color:#248A3D}
-.pill.bad{background:rgba(255,59,48,.16);color:#D70015}
-.pill.warn{background:rgba(255,149,0,.18);color:#C93400}
-@media (prefers-color-scheme:dark){.pill.ok{color:#30D158}.pill.bad{color:#FF453A}.pill.warn{color:#FF9F0A}}
-.banner{margin:12px 18px 0;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.4;display:none}
-.banner.show{display:block}
-.banner.warn{background:rgba(255,149,0,.14);color:#C93400}
-.banner.bad{background:rgba(255,59,48,.14);color:#D70015}
-.banner.ok{background:rgba(52,199,89,.14);color:#248A3D}
-@media (prefers-color-scheme:dark){.banner.warn{color:#FF9F0A}.banner.bad{color:#FF453A}.banner.ok{color:#30D158}}
-.page{padding:16px 18px 0;display:none}
-.page.on{display:block}
-h2.sec{font-size:13px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.4px;margin:0 0 7px 4px}
-.card{background:var(--card);border-radius:12px;overflow:hidden;margin-bottom:18px}
-.row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--sep2);min-height:46px}
-.row:last-child{border-bottom:none}
-.row .k{font-size:16px;flex:1;min-width:0}
-.row .v{font-size:16px;color:var(--label2);text-align:right;font-variant-numeric:tabular-nums}
-.row.stack{display:block}
-input,textarea,select{width:100%;background:var(--fill);border:none;color:var(--label);border-radius:10px;padding:11px 13px;font:400 17px/1.2 inherit;outline:none;-webkit-appearance:none}
-input:focus,textarea:focus{border:1.5px solid var(--blue);padding:9.5px 11.5px}
-textarea{resize:vertical;min-height:74px;font:400 13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
-input[inputmode=numeric]{font-variant-numeric:tabular-nums;letter-spacing:2px;font-weight:600}
-.btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:14px;border:none;border-radius:12px;font:600 17px/1 inherit;background:var(--fill);color:var(--label);cursor:pointer;transition:opacity .12s}
-.btn:active{opacity:.68}
-.btn.primary{background:var(--blue);color:#fff}
-.btn.green{background:var(--green);color:#fff}
-.btn.red{background:var(--red);color:#fff}
-.btn.orange{background:var(--orange);color:#fff}
-.btn.sm{padding:10px;font-size:15px;border-radius:10px}
-.btns{display:flex;gap:9px}.btns .btn{flex:1}
-.sw{position:relative;width:51px;height:31px;flex:0 0 auto}
-.sw input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;z-index:2;cursor:pointer;padding:0}
-.sw i{position:absolute;inset:0;background:var(--fill2);border-radius:16px;transition:background .2s}
-.sw i:after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15);transition:transform .2s}
-.sw input:checked+i{background:var(--green)}
-.sw input:checked+i:after{transform:translateX(20px)}
-.stepper{display:flex;align-items:center;background:var(--fill);border-radius:9px;overflow:hidden}
-.stepper button{width:38px;height:32px;border:none;background:none;color:var(--label);font:400 19px/1 inherit;cursor:pointer}
-.stepper span{min-width:44px;text-align:center;font-size:16px}
-input[type=range]{-webkit-appearance:none;background:transparent;padding:0;height:32px}
-input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--fill2);border-radius:3px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);margin-top:-11px}
-.qcard{background:var(--card);border-radius:12px;padding:15px;margin-bottom:18px}
-.qhead{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--label2);font-weight:600}
-.qtext{font-size:19px;font-weight:700;line-height:1.3;margin:9px 0 13px;min-height:26px}
-.bar{height:5px;background:var(--fill2);border-radius:3px;overflow:hidden;margin-bottom:13px}
-.bar>i{display:block;height:100%;width:0;background:var(--blue);transition:width .2s linear}
-.answers{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.ans{border-radius:12px;padding:15px 11px;color:#fff;font-size:15px;font-weight:600;line-height:1.25;cursor:pointer;display:flex;gap:8px;min-height:66px}
-.ans .sh{opacity:.9;flex:0 0 auto}
-.ans.g0{background:var(--a0)}.ans.g1{background:var(--a1)}.ans.g2{background:var(--a2)}.ans.g3{background:var(--a3)}
-.ans.hit{outline:3px solid var(--green);outline-offset:2px}
-.ans.miss{opacity:.4}
-.log{background:var(--card);border-radius:12px;padding:10px 12px;height:56vh;overflow:auto;font:400 11.5px/1.5 ui-monospace,Menlo,monospace;word-break:break-word}
-.log div{padding:1px 0;border-bottom:1px solid var(--sep2)}
-.log .t{color:var(--label3);margin-right:6px}
-.l{color:var(--label2)}.ok{color:#248A3D}.err{color:#D70015}.warn{color:#C93400}.inf{color:var(--blue)}.mag{color:var(--purple)}
-@media (prefers-color-scheme:dark){.ok{color:#30D158}.err{color:#FF453A}.warn{color:#FF9F0A}.inf{color:#0A84FF}.mag{color:#BF5AF2}}
-.tabbar{position:sticky;bottom:0;z-index:20;display:flex;background:var(--bar);backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--sep);padding:5px 0 calc(5px + env(safe-area-inset-bottom))}
-.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--label3);font:500 10px/1 inherit;padding:5px 2px;cursor:pointer}
-.tabbar button[aria-selected=true]{color:var(--blue)}
-.tabbar svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.hint{font-size:12px;color:var(--label2);line-height:1.45;margin:-10px 4px 18px}
-.tok{font:400 10.5px/1.4 ui-monospace,monospace;color:var(--purple);word-break:break-all;padding:0 4px}
-#ytw iframe{width:100%;height:70px;border:0;border-radius:10px;display:block;margin-top:8px}
-.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--label3);margin-right:5px;vertical-align:1px}
-.dot.ok{background:var(--green)}.dot.bad{background:var(--red)}.dot.warn{background:var(--orange)}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Kahoot Hijack v3 – Worker Relay</title>
+  <style>
+    :root{
+      --blue:#007AFF; --green:#34C759; --red:#FF3B30; --orange:#FF9500; --purple:#AF52DE;
+      --bg:#F2F2F7; --card:#FFFFFF; --sep:rgba(60,60,67,.22); --sep2:rgba(60,60,67,.12);
+      --label:#000; --label2:rgba(60,60,67,.62); --label3:rgba(60,60,67,.32);
+      --fill:rgba(120,120,128,.10); --fill2:rgba(120,120,128,.18);
+      --nav:rgba(249,249,249,.82); --bar:rgba(249,249,249,.86);
+      --a0:#E21B3C; --a1:#1368CE; --a2:#D89E00; --a3:#26890C;
+    }
+    @media (prefers-color-scheme:dark){
+      :root{
+        --bg:#000; --card:#1C1C1E; --sep:rgba(84,84,88,.55); --sep2:rgba(84,84,88,.32);
+        --label:#fff; --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
+        --fill:rgba(120,120,128,.20); --fill2:rgba(120,120,128,.32);
+        --nav:rgba(30,30,32,.82); --bar:rgba(30,30,32,.86);
+      }
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0}
+    body{background:var(--bg);color:var(--label);
+      font:400 17px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Inter,system-ui,sans-serif;
+      min-height:100vh;letter-spacing:-.1px}
+    .app{max-width:600px;margin:0 auto;padding-bottom:8px}
+    .nav{position:sticky;top:0;z-index:20;background:var(--nav);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--sep);padding:12px 18px 11px}
+    .nav h1{margin:0;font-size:27px;font-weight:700;letter-spacing:-.7px}
+    .nav .sub{font-size:12px;color:var(--label2);margin-top:1px}
+    .dots{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+    .pill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--fill);color:var(--label2);white-space:nowrap}
+    .pill.ok{background:rgba(52,199,89,.16);color:#248A3D}
+    .pill.bad{background:rgba(255,59,48,.16);color:#D70015}
+    .pill.warn{background:rgba(255,149,0,.18);color:#C93400}
+    @media (prefers-color-scheme:dark){.pill.ok{color:#30D158}.pill.bad{color:#FF453A}.pill.warn{color:#FF9F0A}}
+    .banner{margin:12px 18px 0;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.4;display:none}
+    .banner.show{display:block}
+    .banner.warn{background:rgba(255,149,0,.14);color:#C93400}
+    .banner.bad{background:rgba(255,59,48,.14);color:#D70015}
+    .banner.ok{background:rgba(52,199,89,.14);color:#248A3D}
+    @media (prefers-color-scheme:dark){.banner.warn{color:#FF9F0A}.banner.bad{color:#FF453A}.banner.ok{color:#30D158}}
+    .page{padding:16px 18px 0;display:none}
+    .page.on{display:block}
+    h2.sec{font-size:13px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.4px;margin:0 0 7px 4px}
+    .card{background:var(--card);border-radius:12px;overflow:hidden;margin-bottom:18px}
+    .row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--sep2);min-height:46px}
+    .row:last-child{border-bottom:none}
+    .row .k{font-size:16px;flex:1;min-width:0}
+    .row .v{font-size:16px;color:var(--label2);text-align:right;font-variant-numeric:tabular-nums}
+    .row.stack{display:block}
+    input,textarea,select{width:100%;background:var(--fill);border:none;color:var(--label);border-radius:10px;padding:11px 13px;font:400 17px/1.2 inherit;outline:none;-webkit-appearance:none}
+    input:focus,textarea:focus{border:1.5px solid var(--blue);padding:9.5px 11.5px}
+    textarea{resize:vertical;min-height:74px;font:400 13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
+    input[inputmode=numeric]{font-variant-numeric:tabular-nums;letter-spacing:2px;font-weight:600}
+    .btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:14px;border:none;border-radius:12px;font:600 17px/1 inherit;background:var(--fill);color:var(--label);cursor:pointer;transition:opacity .12s}
+    .btn:active{opacity:.68}
+    .btn.primary{background:var(--blue);color:#fff}
+    .btn.green{background:var(--green);color:#fff}
+    .btn.red{background:var(--red);color:#fff}
+    .btn.orange{background:var(--orange);color:#fff}
+    .btn.sm{padding:10px;font-size:15px;border-radius:10px}
+    .btns{display:flex;gap:9px}.btns .btn{flex:1}
+    .sw{position:relative;width:51px;height:31px;flex:0 0 auto}
+    .sw input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;z-index:2;cursor:pointer;padding:0}
+    .sw i{position:absolute;inset:0;background:var(--fill2);border-radius:16px;transition:background .2s}
+    .sw i:after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15);transition:transform .2s}
+    .sw input:checked+i{background:var(--green)}
+    .sw input:checked+i:after{transform:translateX(20px)}
+    .stepper{display:flex;align-items:center;background:var(--fill);border-radius:9px;overflow:hidden}
+    .stepper button{width:38px;height:32px;border:none;background:none;color:var(--label);font:400 19px/1 inherit;cursor:pointer}
+    .stepper span{min-width:44px;text-align:center;font-size:16px}
+    input[type=range]{-webkit-appearance:none;background:transparent;padding:0;height:32px}
+    input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--fill2);border-radius:3px}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);margin-top:-11px}
+    .qcard{background:var(--card);border-radius:12px;padding:15px;margin-bottom:18px}
+    .qhead{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--label2);font-weight:600}
+    .qtext{font-size:19px;font-weight:700;line-height:1.3;margin:9px 0 13px;min-height:26px}
+    .bar{height:5px;background:var(--fill2);border-radius:3px;overflow:hidden;margin-bottom:13px}
+    .bar>i{display:block;height:100%;width:0;background:var(--blue);transition:width .2s linear}
+    .answers{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .ans{border-radius:12px;padding:15px 11px;color:#fff;font-size:15px;font-weight:600;line-height:1.25;cursor:pointer;display:flex;gap:8px;min-height:66px}
+    .ans .sh{opacity:.9;flex:0 0 auto}
+    .ans.g0{background:var(--a0)}.ans.g1{background:var(--a1)}.ans.g2{background:var(--a2)}.ans.g3{background:var(--a3)}
+    .ans.hit{outline:3px solid var(--green);outline-offset:2px}
+    .ans.miss{opacity:.4}
+    .log{background:var(--card);border-radius:12px;padding:10px 12px;height:56vh;overflow:auto;font:400 11.5px/1.5 ui-monospace,Menlo,monospace;word-break:break-word}
+    .log div{padding:1px 0;border-bottom:1px solid var(--sep2)}
+    .log .t{color:var(--label3);margin-right:6px}
+    .l{color:var(--label2)}.ok{color:#248A3D}.err{color:#D70015}.warn{color:#C93400}.inf{color:var(--blue)}.mag{color:var(--purple)}
+    @media (prefers-color-scheme:dark){.ok{color:#30D158}.err{color:#FF453A}.warn{color:#FF9F0A}.inf{color:#0A84FF}.mag{color:#BF5AF2}}
+    .tabbar{position:sticky;bottom:0;z-index:20;display:flex;background:var(--bar);backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--sep);padding:5px 0 calc(5px + env(safe-area-inset-bottom))}
+    .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--label3);font:500 10px/1 inherit;padding:5px 2px;cursor:pointer}
+    .tabbar button[aria-selected=true]{color:var(--blue)}
+    .tabbar svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .hint{font-size:12px;color:var(--label2);line-height:1.45;margin:-10px 4px 18px}
+    .tok{font:400 10.5px/1.4 ui-monospace,monospace;color:var(--purple);word-break:break-all;padding:0 4px}
+    #ytw iframe{width:100%;height:70px;border:0;border-radius:10px;display:block;margin-top:8px}
+    .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--label3);margin-right:5px;vertical-align:1px}
+    .dot.ok{background:var(--green)}.dot.bad{background:var(--red)}.dot.warn{background:var(--orange)}
+  </style>
 </head>
 <body>
 <div class="app">
 
 <header class="nav">
-  <h1>Kahoot Hijack</h1>
-  <div class="sub">direct to kahoot.it — no relay</div>
+  <h1>Kahoot Hijack v3</h1>
+  <div class="sub">private relay – no dead proxies</div>
   <div class="dots">
     <span class="pill" id="pFrame"><span class="dot"></span>frame</span>
     <span class="pill" id="pSess"><span class="dot"></span>session</span>
@@ -225,7 +225,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <button class="btn sm" id="tokClear">Clear token</button>
     <button class="btn sm" id="epClear">Forget endpoint</button>
   </div>
-  <p class="hint">Token = base64(header) XOR decode(challenge), built automatically. Only touch this if every route is blocked.</p>
+  <p class="hint">Token = base64(header) XOR decode(challenge), built automatically via your relay. If the relay is down, paste a token manually from dev tools.</p>
 </section>
 
 <section class="page" id="page-log">
@@ -245,7 +245,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 </div>
 
 <script>
-/* ===================== utils ===================== */
+/* ===================== YOUR WORKER URL ===================== */
+const WORKER = 'https://kahoot-relay.therizzlerismetotally.workers.dev';
+
+/* ===================== utils (unchanged) ===================== */
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -347,566 +350,479 @@ function decoders(ch){
   return out;
 }
 
-/* ===================== session fetch (working proxies) ===================== */
-const R='https://kahoot.it/reserve/session/';
-const PROXIES=[
-  { n:'corsproxy.io',   t:11000, b:u=>'https://corsproxy.io/?url='+enc(u) },
-  { n:'workers.dev',    t:11000, b:u=>'https://test.cors.workers.dev/?'+u },
-  { n:'allorigins',     t:15000, b:u=>'https://api.allorigins.win/raw?url='+enc(u) },
-  { n:'jina',           t:15000, b:u=>'https://r.jina.ai/'+u, hdr:true },
-  { n:'direct',         t:6000,  b:u=>u },
-  { n:'cors.lol',       t:11000, b:u=>'https://api.cors.lol/?url='+enc(u) },
-  { n:'thingproxy',     t:15000, b:u=>'https://thingproxy.freeboard.io/fetch/'+u },
-  { n:'codetabs',       t:13000, b:u=>'https://api.codetabs.com/v1/proxy?quest='+enc(u) },
-  { n:'allorigins-json',t:15000, jsonp:true, b:u=>'https://api.allorigins.win/get?url='+enc(u), pick:d=>d&&d.contents }
+/* ===================== session fetch (via YOUR Worker) ===================== */
+async function oneFetch(pin) {
+  const url = `${WORKER}?url=${enc('https://kahoot.it/reserve/session/' + pin + '?_=' + Date.now())}`;
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error('worker http ' + r.status);
+  const text = await r.text();
+  const header = r.headers.get('x-kahoot-session-token');
+  return { text, header };
+}
+
+async function grabSession(pin) {
+  // try up to 2 times, 2 second delay
+  for (let i = 0; i < 2; i++) {
+    try {
+      const res = await oneFetch(pin);
+      const challenge = extractChallenge(res.text);
+      if (!challenge) throw new Error('no challenge in response');
+      log('worker: challenge+' + (res.header ? 'header' : 'no header'), res.header ? 'ok' : 'warn');
+      pill('#pSess', (res.header ? 'header ' : '') + 'challenge', res.header ? 'ok' : 'warn');
+      return { header: res.header, challenge };
+    } catch (e) {
+      log(`worker attempt ${i+1} failed: ${e.message}`, 'err');
+      if (i === 1) throw e;
+      await sleep(2000);
+    }
+  }
+}
+
+/* ===================== token building ===================== */
+function buildTokens(session) {
+  const out = [], seen = new Set();
+  const push = (t, tag) => { if (!t || t.length < 8 || seen.has(t)) return; seen.add(t); out.push({ t, tag }); };
+
+  const hv = [];
+  if (session.header) {
+    const d = b64dec(session.header);
+    if (d) hv.push({ v: d, tag: 'b64hdr' });
+    hv.push({ v: String(session.header).trim(), tag: 'rawhdr' });
+  }
+  const cv = [];
+  for (const de of decoders(session.challenge)) {
+    try {
+      const input = (session.challenge.match(/decode\.call\(this\s*,\s*'([^']*)'\)/) || [])[1] || '';
+      const t = de.fn(input);
+      if (t) cv.push({ v: t, tag: de.tag });
+    } catch (e) {}
+  }
+
+  // XOR combos
+  if (session.header) {
+    const dh = b64dec(session.header);
+    if (dh) for (const c of cv) push(xorTokens(dh, c.v), 'xor(b64hdr,' + c.tag + ')');
+    for (const c of cv) push(xorTokens(String(session.header).trim(), c.v), 'xor(rawhdr,' + c.tag + ')');
+  }
+  for (const h of hv) for (const c of cv) push(xorTokens(h.v, c.v), 'xor(' + h.tag + ',' + c.tag + ')');
+  for (const h of hv) push(h.v, h.tag);
+  for (const c of cv) push(c.v, c.tag);
+  return out.slice(0, 16);
+}
+
+/* ===================== websocket probe ===================== */
+const SPECIAL = /[\\?#%\[\]{}|^`<>"]/g;
+const safeEnc = s => s.replace(SPECIAL, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+const modeEnc = (m, t) => m === 'enc' ? enc(t) : m === 'safe' ? safeEnc(t) : t;
+
+const SHAPES = [
+  { scheme: 'wss', host: 'kahoot.it', mode: 'enc', tag: 'wss/enc' },
+  { scheme: 'wss', host: 'kahoot.it', mode: 'safe', tag: 'wss/safe' },
+  { scheme: 'wss', host: 'kahoot.it', mode: 'raw', tag: 'wss/raw' },
+  { scheme: 'wss', host: 'play.kahoot.it', mode: 'enc', tag: 'play/enc' }
 ];
-function jsonp(url,to){
-  return new Promise((res,rej)=>{
-    const cb='__k'+rnd(8), s=document.createElement('script');
-    let done=false;
-    const clean=()=>{ clearTimeout(tm); try{delete window[cb];}catch(e){} s.remove(); };
-    const tm=setTimeout(()=>{ if(!done){done=true;clean();rej(new Error('jsonp timeout'));} },to);
-    window[cb]=d=>{ if(done)return; done=true; clean(); res(d); };
-    s.onerror=()=>{ if(done)return; done=true; clean(); rej(new Error('jsonp error')); };
-    s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
-    document.head.appendChild(s);
-  });
+let EP = { scheme: 'wss', host: 'kahoot.it', mode: 'enc' };
+function wsUrl(pin, token) {
+  return EP.scheme + '://' + EP.host + '/cometd/' + pin + '/' + modeEnc(EP.mode, token);
 }
-async function oneFetch(p,url){
-  const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),p.t);
-  try{
-    if(p.jsonp){
-      const d=await jsonp(p.b(url),p.t);
-      let txt = '';
-      if (typeof d === 'object' && d !== null) {
-        if (p.pick) {
-          const picked = p.pick(d);
-          txt = typeof picked === 'string' ? picked : JSON.stringify(picked);
-        } else {
-          txt = JSON.stringify(d);
-        }
-      } else if (typeof d === 'string') {
-        txt = d;
-      }
-      // attempt to extract header from jsonp response (sometimes available)
-      let header = null;
-      if (d && d.headers && d.headers['x-kahoot-session-token']) {
-        header = d.headers['x-kahoot-session-token'];
-      }
-      return { text: txt || '', header };
-    }
-    const r=await fetch(p.b(url),{signal:ctl.signal,cache:'no-store'});
-    if(!r.ok) throw new Error('http '+r.status);
-    const text=await r.text();
-    let header=null; 
-    try{ 
-      // fetch API doesn't expose all headers via CORS; but some proxies include them in body
-      const rawHeaders = r.headers;
-      if (rawHeaders.has('x-kahoot-session-token')) {
-        header = rawHeaders.get('x-kahoot-session-token');
-      }
-    } catch(e){}
-    // also try to extract from body if the proxy embeds it (e.g., jina)
-    return { text, header };
-  } finally { clearTimeout(to); }
-}
-async function grabSession(pin, rounds){
-  const found=[];
-  rounds=rounds||3;
-  for(let r=0;r<rounds;r++){
-    if(r) await sleep(500);
-    // sequential staggered fetches to avoid hitting same proxy simultaneously
-    for (const p of PROXIES) {
-      await sleep(50);
-      try{
-        const res=await oneFetch(p,R+pin+'/?_='+Date.now()+rnd(4));
-        const chal=extractChallenge(res.text);
-        if(res.header||chal){
-          found.push({ src:p.n, header:res.header, challenge:chal });
-          log('src '+p.n+' → '+(res.header?'header ':'')+(chal?'challenge':''), res.header&&chal?'ok':'l');
-          if (res.header && chal) break; // early exit if we have a pair
-        }
-      }catch(e){ 
-        log('src '+p.n+' fail: '+(e&&e.name==='AbortError'?'timeout':e.message),'l');
-      }
-    }
-    if(found.some(f=>f.header&&f.challenge)) break;
-  }
-  const hdr=found.filter(f=>f.header).length, ch=found.filter(f=>f.challenge).length;
-  pill('#pSess', hdr+'hdr '+ch+'chal', hdr&&ch?'ok':hdr||ch?'warn':'bad');
-  return found;
-}
+const HS = id => JSON.stringify([{
+  channel: '/meta/handshake', version: '1.0', minimumVersion: '1.0',
+  supportedConnectionTypes: ['websocket', 'long-polling'], advice: { timeout: 60000, interval: 0 },
+  ext: { ack: true, timesync: true }, id: String(id)
+}]);
 
-/* ===================== candidate tokens ===================== */
-function buildTokens(sessions){
-  const out=[], seen=new Set();
-  const push=(t,tag)=>{ if(!t||t.length<8||seen.has(t)) return; seen.add(t); out.push({t,tag}); };
-
-  const hv=[];  // header variants
-  const cv=[];  // challenge variants
-  for(const s of sessions){
-    if(s.header){
-      const d=b64dec(s.header);
-      if(d) hv.push({v:d,tag:'b64hdr'});
-      hv.push({v:String(s.header).trim(),tag:'rawhdr'});
-    }
-    if(s.challenge){
-      for(const de of decoders(s.challenge)){
-        try{ 
-          const challengeStr = s.challenge; // the raw challenge string
-          // find the string inside decode.call(this, '...')
-          const match = challengeStr.match(/decode\.call\(this\s*,\s*'([^']*)'\)/);
-          const input = match ? match[1] : '';
-          const t = de.fn(input);
-          if(t) cv.push({v:t,tag:de.tag});
-        } catch(e){}
-      }
-    }
-  }
-  /* dedupe variant lists */
-  const uniq=list=>{ const s2=new Set(); return list.filter(x=>{ if(s2.has(x.v)) return false; s2.add(x.v); return true; }); };
-  const H=uniq(hv).slice(0,4), C=uniq(cv).slice(0,4);
-
-  /* 1. main XOR: header (b64 decoded) XOR challenge (decoded) */
-  for(const s of sessions){
-    if(!s.header||!s.challenge) continue;
-    const dh=b64dec(s.header); if(!dh) continue;
-    for(const c of C) push(xorTokens(dh,c.v),'xor(b64hdr,'+c.tag+')');
-  }
-  /* 2. raw header XOR */
-  for(const s of sessions){
-    if(!s.header||!s.challenge) continue;
-    for(const c of C) push(xorTokens(String(s.header).trim(),c.v),'xor(rawhdr,'+c.tag+')');
-  }
-  /* 3. cross XOR */
-  for(const h of H) for(const c of C) push(xorTokens(h.v,c.v),'xor('+h.tag+','+c.tag+')');
-  /* 4. fallback raw tokens */
-  for(const h of H) push(h.v,h.tag);
-  for(const c of C) push(c.v,c.tag);
-  return out.slice(0,16);
-}
-
-/* ===================== websocket shapes + probe ===================== */
-const SPECIAL=/[\\?#%\[\]{}|^`<>"]/g;
-const safeEnc=s=>s.replace(SPECIAL,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase());
-const modeEnc=(m,t)=>m==='enc'?enc(t):m==='safe'?safeEnc(t):t;
-
-const SHAPES=[
-  { scheme:'wss', host:'kahoot.it',      mode:'enc',  tag:'wss/enc' },
-  { scheme:'wss', host:'kahoot.it',      mode:'safe', tag:'wss/safe' },
-  { scheme:'wss', host:'kahoot.it',      mode:'raw',  tag:'wss/raw' },
-  { scheme:'wss', host:'play.kahoot.it', mode:'enc',  tag:'play/enc' },
-  { scheme:'wss', host:'kahoot.it',      mode:'enc',  tag:'wss/enc/trail', url: (p,t)=>'wss://kahoot.it/cometd/'+p+'/'+modeEnc('enc',t)+'/' }
-];
-let EP={scheme:'wss',host:'kahoot.it',mode:'enc'};
-function wsUrl(pin,token){ 
-  return EP.scheme+'://'+EP.host+'/cometd/'+pin+'/'+modeEnc(EP.mode,token); 
-}
-const HS=id=>JSON.stringify([{channel:'/meta/handshake',version:'1.0',minimumVersion:'1.0',
-  supportedConnectionTypes:['websocket','long-polling'],advice:{timeout:60000,interval:0},
-  ext:{ack:true,timesync:true},id:String(id)}]);
-
-function probe(pin,token,sh,timeout){
-  // build url
-  let url;
-  if (sh.url) {
-    url = sh.url(pin, token);
-  } else {
-    url = sh.scheme+'://'+sh.host+'/cometd/'+pin+'/'+modeEnc(sh.mode,token);
-  }
-  return new Promise(res=>{
-    let ws,done=false,opened=false;
-    const fin=(ok,why)=>{ if(done)return; done=true; clearTimeout(tm); try{ws&&ws.close();}catch(e){} res({opened,ok,why,url}); };
-    const tm=setTimeout(()=>fin(false,opened?'open, no handshake reply':'no upgrade'),timeout);
-    if(typeof WebSocket==='undefined') return fin(false,'WebSocket undefined');
-    try{ ws=new WebSocket(url); }catch(e){ return fin(false,'ctor '+(e&&e.name)+': '+(e&&e.message)); }
-    ws.onopen=()=>{ opened=true; try{ ws.send(HS(1)); }catch(e){ fin(false,'send failed'); } };
-    ws.onerror=()=>{};
-    ws.onmessage=ev=>{
-      let m; try{ m=JSON.parse(ev.data); }catch(e){ return fin(false,'non-json frame'); }
-      (Array.isArray(m)?m:[m]).forEach(x=>{
-        if(x&&x.channel==='/meta/handshake')
-          fin(!!x.successful, x.successful?'OK clientId='+x.clientId:'REJECTED: '+(x.error||'no error field'));
+function probe(pin, token, sh, timeout) {
+  const url = sh.scheme + '://' + sh.host + '/cometd/' + pin + '/' + modeEnc(sh.mode, token);
+  return new Promise(res => {
+    let ws, done = false, opened = false;
+    const fin = (ok, why) => { if (done) return; done = true; clearTimeout(tm); try { ws && ws.close(); } catch (e) {} res({ opened, ok, why, url }); };
+    const tm = setTimeout(() => fin(false, opened ? 'open, no handshake reply' : 'no upgrade'), timeout);
+    if (typeof WebSocket === 'undefined') return fin(false, 'WebSocket undefined');
+    try { ws = new WebSocket(url); } catch (e) { return fin(false, 'ctor ' + (e && e.name) + ': ' + (e && e.message)); }
+    ws.onopen = () => { opened = true; try { ws.send(HS(1)); } catch (e) { fin(false, 'send failed'); } };
+    ws.onerror = () => {};
+    ws.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch (e) { return fin(false, 'non-json frame'); }
+      (Array.isArray(m) ? m : [m]).forEach(x => {
+        if (x && x.channel === '/meta/handshake')
+          fin(!!x.successful, x.successful ? 'OK clientId=' + x.clientId : 'REJECTED: ' + (x.error || 'no error field'));
       });
     };
-    ws.onclose=e=>fin(false,(opened?'closed after upgrade ':'closed before upgrade ')+e.code+(e.reason?' "'+e.reason+'"':''));
+    ws.onclose = e => fin(false, (opened ? 'closed after upgrade ' : 'closed before upgrade ') + e.code + (e.reason ? ' "' + e.reason + '"' : ''));
   });
 }
-async function wsTest(){
-  log('frame origin='+(location.origin||'null')+' proto='+location.protocol+' WebSocket='+(typeof WebSocket),'inf');
-  for(const u of ['wss://ws.postman-echo.com/raw','wss://ws.ifelse.io']){
-    const r=await probe('1','x',{scheme:u.split('://')[0],host:u.split('://')[1].split('/')[0],mode:'raw'},6000);
-    if(r.opened||r.why.indexOf('closed')>=0){
-      log('echo '+u.replace(/^wss:\/\//,'')+' → '+(r.opened?'OPEN OK':r.why),r.opened?'ok':'warn');
-      if(r.opened){ pill('#pFrame','sockets ok','ok'); return; }
+
+async function wsTest() {
+  log('frame origin=' + (location.origin || 'null') + ' proto=' + location.protocol + ' WebSocket=' + (typeof WebSocket), 'inf');
+  for (const u of ['wss://ws.postman-echo.com/raw', 'wss://ws.ifelse.io']) {
+    const r = await probe('1', 'x', { scheme: u.split('://')[0], host: u.split('://')[1].split('/')[0], mode: 'raw' }, 6000);
+    if (r.opened || r.why.indexOf('closed') >= 0) {
+      log('echo ' + u.replace(/^wss:\/\//, '') + ' → ' + (r.opened ? 'OPEN OK' : r.why), r.opened ? 'ok' : 'warn');
+      if (r.opened) { pill('#pFrame', 'sockets ok', 'ok'); return; }
     }
   }
-  pill('#pFrame','sockets blocked','bad');
-  banner('Sockets are blocked in this frame. Host the file and embed by URL.','bad');
+  pill('#pFrame', 'sockets blocked', 'bad');
+  banner('Sockets are blocked in this frame. Host the file and embed by URL.', 'bad');
 }
 
-/* ===================== resolver (retry loop) ===================== */
-let RESOLVING=false, LOCKED=null;
-async function resolveToken(pin,manual){
-  if(RESOLVING) throw new Error('resolver busy');
-  RESOLVING=true;
-  try{
-    let cands=[];
-    if(manual){
-      log('token: manual ('+manual.length+')','inf');
-      cands=[{t:manual,tag:'manual'}];
+/* ===================== resolver (uses worker) ===================== */
+let RESOLVING = false, LOCKED = null;
+async function resolveToken(pin, manual) {
+  if (RESOLVING) throw new Error('resolver busy');
+  RESOLVING = true;
+  try {
+    let cands = [];
+    if (manual) {
+      log('token: manual (' + manual.length + ')', 'inf');
+      cands = [{ t: manual, tag: 'manual' }];
     } else {
-      pill('#pTok','token: fetching','warn');
-      log('fetching session for '+pin+'…','inf');
-      const sessions=await grabSession(pin,3);
-      const live=sessions.filter(s=>s.challenge);
-      if(!live.length){
-        throw new Error('no session — game may not be live yet (reserve/session returned nothing)');
-      }
-      const withHdr=sessions.filter(s=>s.header&&s.challenge).length;
-      if(!withHdr) log('WARNING: no response carried the x-kahoot-session-token header — XOR impossible','warn');
-      else log(withHdr+' response(s) carried header+challenge — can build the real token','ok');
-      cands=buildTokens(sessions);
-      log('candidates: '+cands.map(c=>c.tag).join(' | '),'mag');
-      if(!cands.length) throw new Error('no token candidates');
+      pill('#pTok', 'token: fetching', 'warn');
+      log('fetching session for ' + pin + ' via relay…', 'inf');
+      const session = await grabSession(pin);
+      if (!session) throw new Error('could not fetch session');
+      cands = buildTokens(session);
+      log('candidates: ' + cands.map(c => c.tag).join(' | '), 'mag');
+      if (!cands.length) throw new Error('no token candidates');
     }
 
-    for(const c of cands){
-      for(const sh of SHAPES){
-        const r=await probe(pin,c.t,sh,6500);
-        log('probe «'+c.tag+'» '+sh.tag+' → '+(r.ok?'HANDSHAKE OK':r.why),r.ok?'ok':'l');
-        if(r.ok){
-          EP={scheme:sh.scheme,host:sh.host,mode:sh.mode};
-          LOCKED=c.t;
-          S.set('ep',sh.scheme+'|'+sh.host+'|'+sh.mode);
-          pill('#pTok','token locked','ok');
-          pill('#pEp',sh.scheme+'://'+sh.host+' '+sh.mode,'ok');
-          $('#tokView').textContent=c.tag+' → '+c.t.slice(0,40).replace(/[\x00-\x1f]/g,'·')+'…  ['+c.t.length+']';
-          log('TOKEN LOCKED via «'+c.tag+'» on '+sh.tag,'ok');
+    for (const c of cands) {
+      for (const sh of SHAPES) {
+        const r = await probe(pin, c.t, sh, 6500);
+        log('probe «' + c.tag + '» ' + sh.tag + ' → ' + (r.ok ? 'HANDSHAKE OK' : r.why), r.ok ? 'ok' : 'l');
+        if (r.ok) {
+          EP = { scheme: sh.scheme, host: sh.host, mode: sh.mode };
+          LOCKED = c.t;
+          S.set('ep', sh.scheme + '|' + sh.host + '|' + sh.mode);
+          pill('#pTok', 'token locked', 'ok');
+          pill('#pEp', sh.scheme + '://' + sh.host + ' ' + sh.mode, 'ok');
+          $('#tokView').textContent = c.tag + ' → ' + c.t.slice(0, 40).replace(/[\x00-\x1f]/g, '·') + '…  [' + c.t.length + ']';
+          log('TOKEN LOCKED via «' + c.tag + '» on ' + sh.tag, 'ok');
           banner('');
           return c.t;
         }
       }
     }
-    throw new Error('every candidate rejected on every endpoint ('+cands.length+' candidates)');
-  } finally { RESOLVING=false; }
+    throw new Error('every candidate rejected on every endpoint (' + cands.length + ' candidates)');
+  } finally { RESOLVING = false; }
 }
 
 /* ===================== player ===================== */
-let players=[], solo=null, armOn=false;
-const ICON=['▲','◆','●','■'];
-class Player{
-  constructor(pin,name,token,on){
-    this.pin=pin; this.name=name; this.token=token; this.on=on||{};
-    this.n=1; this.clientId=null; this.joined=false; this.dead=false;
-    this.qid=null; this.qnum=0; this.answers=null; this.answered=false;
+let players = [], solo = null, armOn = false;
+const ICON = ['▲', '◆', '●', '■'];
+class Player {
+  constructor(pin, name, token, on) {
+    this.pin = pin; this.name = name; this.token = token; this.on = on || {};
+    this.n = 1; this.clientId = null; this.joined = false; this.dead = false;
+    this.qid = null; this.qnum = 0; this.answers = null; this.answered = false;
   }
-  id(){ return String(this.n++); }
-  send(o){ if(this.ws&&this.ws.readyState===1){ o.clientId=this.clientId; this.ws.send(JSON.stringify([o])); } }
-  connect(){
-    return new Promise((res,rej)=>{
-      const url=wsUrl(this.pin,this.token);
+  id() { return String(this.n++); }
+  send(o) { if (this.ws && this.ws.readyState === 1) { o.clientId = this.clientId; this.ws.send(JSON.stringify([o])); } }
+  connect() {
+    return new Promise((res, rej) => {
+      const url = wsUrl(this.pin, this.token);
       let ws;
-      try{ ws=new WebSocket(url); }catch(e){ return rej(new Error('ctor '+(e&&e.message))); }
-      this.ws=ws;
-      const tm=setTimeout(()=>rej(new Error('ws timeout')),15000);
-      ws.onopen=()=>this.send({channel:'/meta/handshake',version:'1.0',minimumVersion:'1.0',
-        supportedConnectionTypes:['websocket','long-polling'],advice:{timeout:60000,interval:0},
-        ext:{ack:true,timesync:true},id:this.id()});
-      ws.onmessage=ev=>{ let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
-        (Array.isArray(m)?m:[m]).forEach(x=>this.handle(x,res,rej,tm)); };
-      ws.onerror=()=>{};
-      ws.onclose=()=>{ this.dead=true; this.on.close&&this.on.close(this); };
+      try { ws = new WebSocket(url); } catch (e) { return rej(new Error('ctor ' + (e && e.message))); }
+      this.ws = ws;
+      const tm = setTimeout(() => rej(new Error('ws timeout')), 15000);
+      ws.onopen = () => this.send({ channel: '/meta/handshake', version: '1.0', minimumVersion: '1.0',
+        supportedConnectionTypes: ['websocket', 'long-polling'], advice: { timeout: 60000, interval: 0 },
+        ext: { ack: true, timesync: true }, id: this.id() });
+      ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+        (Array.isArray(m) ? m : [m]).forEach(x => this.handle(x, res, rej, tm)); };
+      ws.onerror = () => {};
+      ws.onclose = () => { this.dead = true; this.on.close && this.on.close(this); };
     });
   }
-  handle(m,res,rej,tm){
-    if(!m) return;
-    if(m.channel==='/meta/handshake'){
-      if(!m.successful){ clearTimeout(tm); return rej(new Error('handshake: '+(m.error||'?'))); }
-      this.clientId=m.clientId;
-      this.send({channel:'/meta/subscribe',subscription:'/service/controller',id:this.id()});
-      this.send({channel:'/meta/subscribe',subscription:'/service/player',id:this.id()});
-      this.send({channel:'/meta/connect',connectionType:'websocket',id:this.id()});
-      this.send({channel:'/service/controller',id:this.id(),data:{
-        type:'login',gameid:this.pin,host:'kahoot.it',name:this.name,
-        content:JSON.stringify({device:{userAgent:navigator.userAgent,screen:{width:1920,height:1080}},
-                                userAgent:navigator.userAgent})}});
+  handle(m, res, rej, tm) {
+    if (!m) return;
+    if (m.channel === '/meta/handshake') {
+      if (!m.successful) { clearTimeout(tm); return rej(new Error('handshake: ' + (m.error || '?'))); }
+      this.clientId = m.clientId;
+      this.send({ channel: '/meta/subscribe', subscription: '/service/controller', id: this.id() });
+      this.send({ channel: '/meta/subscribe', subscription: '/service/player', id: this.id() });
+      this.send({ channel: '/meta/connect', connectionType: 'websocket', id: this.id() });
+      this.send({ channel: '/service/controller', id: this.id(), data: {
+        type: 'login', gameid: this.pin, host: 'kahoot.it', name: this.name,
+        content: JSON.stringify({ device: { userAgent: navigator.userAgent, screen: { width: 1920, height: 1080 } }, userAgent: navigator.userAgent })
+      }});
       clearTimeout(tm); res(this); return;
     }
-    if(m.channel==='/meta/connect'&&m.successful){
-      setTimeout(()=>{ if(!this.dead) this.send({channel:'/meta/connect',connectionType:'websocket',id:this.id()}); },200);
+    if (m.channel === '/meta/connect' && m.successful) {
+      setTimeout(() => { if (!this.dead) this.send({ channel: '/meta/connect', connectionType: 'websocket', id: this.id() }); }, 200);
       return;
     }
-    if(m.channel==='/meta/subscribe'||m.channel==='/meta/disconnect') return;
-    const d=m.data||{};
-    let c=d.content;
-    if(typeof c==='string'){ try{ c=JSON.parse(c); }catch(e){ c=null; } }
-    if(d.type==='login_response'){
-      if(d.error) this.on.fail&&this.on.fail(this,d.error);
-      else { this.joined=true; this.on.join&&this.on.join(this,d); }
+    if (m.channel === '/meta/subscribe' || m.channel === '/meta/disconnect') return;
+    const d = m.data || {};
+    let c = d.content;
+    if (typeof c === 'string') { try { c = JSON.parse(c); } catch (e) { c = null; } }
+    if (d.type === 'login_response') {
+      if (d.error) this.on.fail && this.on.fail(this, d.error);
+      else { this.joined = true; this.on.join && this.on.join(this, d); }
       return;
     }
-    if(d.type==='question_start'){
-      this.qid=d.id; this.qnum=(c&&c.questionIndex)||0;
-      this.answers=c&&c.quizQuestionAnswers; this.answered=false;
-      this.on.question&&this.on.question(this,c,d);
-      if($('#auto').checked && Math.random()*100<=+$('#acc').value)
-        setTimeout(()=>this.autoAnswer(),+$('#delay').value);
+    if (d.type === 'question_start') {
+      this.qid = d.id; this.qnum = (c && c.questionIndex) || 0;
+      this.answers = c && c.quizQuestionAnswers; this.answered = false;
+      this.on.question && this.on.question(this, c, d);
+      if ($('#auto').checked && Math.random() * 100 <= +$('#acc').value)
+        setTimeout(() => this.autoAnswer(), +$('#delay').value);
       return;
     }
-    if(d.type==='answer_reveal'||d.type==='question_end'||d.type==='game_over'||d.type==='quiz_end')
-      this.on.event&&this.on.event(this,d.type,c);
+    if (d.type === 'answer_reveal' || d.type === 'question_end' || d.type === 'game_over' || d.type === 'quiz_end')
+      this.on.event && this.on.event(this, d.type, c);
   }
-  autoAnswer(){
-    if(this.answered||!this.qid) return;
-    let i=0;
-    if(this.answers&&this.answers.length){ let b=-1; this.answers.forEach((v,n)=>{ if(v>b){b=v;i=n;} }); }
-    else i=Math.floor(Math.random()*4);
+  autoAnswer() {
+    if (this.answered || !this.qid) return;
+    let i = 0;
+    if (this.answers && this.answers.length) { let b = -1; this.answers.forEach((v, n) => { if (v > b) { b = v; i = n; } }); }
+    else i = Math.floor(Math.random() * 4);
     this.answer(i);
   }
-  answer(i){
-    if(!this.qid||this.answered) return;
-    this.answered=true;
-    this.send({channel:'/service/controller',id:this.id(),data:{type:'message',gameid:this.pin,host:'kahoot.it',id:this.qid,
-      content:JSON.stringify({type:'quiz',choice:i,questionIndex:this.qnum,
-        meta:{lag:10,device:{userAgent:navigator.userAgent,screen:{width:1920,height:1080}}}})}});
-    this.on.answer&&this.on.answer(this,i);
+  answer(i) {
+    if (!this.qid || this.answered) return;
+    this.answered = true;
+    this.send({ channel: '/service/controller', id: this.id(), data: { type: 'message', gameid: this.pin, host: 'kahoot.it', id: this.qid,
+      content: JSON.stringify({ type: 'quiz', choice: i, questionIndex: this.qnum,
+        meta: { lag: 10, device: { userAgent: navigator.userAgent, screen: { width: 1920, height: 1080 } } } })
+    }});
+    this.on.answer && this.on.answer(this, i);
   }
-  blast(text){
-    this.send({channel:'/service/controller',id:this.id(),data:{type:'message',gameid:this.pin,host:'kahoot.it',id:this.qid||1,
-      content:JSON.stringify({type:'message',message:text})}});
+  blast(text) {
+    this.send({ channel: '/service/controller', id: this.id(), data: { type: 'message', gameid: this.pin, host: 'kahoot.it', id: this.qid || 1,
+      content: JSON.stringify({ type: 'message', message: text })
+    }});
   }
-  raw(channel,data){ this.send({channel,id:this.id(),data}); }
-  close(){ this.dead=true; try{ this.ws.close(); }catch(e){} }
+  raw(channel, data) { this.send({ channel, id: this.id(), data }); }
+  close() { this.dead = true; try { this.ws.close(); } catch (e) {} }
 }
 
 /* ===================== live view ===================== */
-function renderQuestion(c){
-  if(!c) return;
-  $('#qIdx').textContent=(c.questionIndex??0)+1;
-  $('#qText').textContent=c.question||'';
-  const box=$('#answers'); box.innerHTML='';
-  (c.answers||[]).forEach((a,i)=>{
-    const b=document.createElement('div');
-    b.className='ans g'+i;
-    b.innerHTML='<span class="sh">'+ICON[i]+'</span><span>'+(i+1)+'. '+String(a.answer||'').replace(/</g,'&lt;')+'</span>';
-    b.onclick=()=>{ players.forEach(p=>{ p.answered=false; p.answer(i); }); b.classList.add('hit'); };
+function renderQuestion(c) {
+  if (!c) return;
+  $('#qIdx').textContent = (c.questionIndex ?? 0) + 1;
+  $('#qText').textContent = c.question || '';
+  const box = $('#answers'); box.innerHTML = '';
+  (c.answers || []).forEach((a, i) => {
+    const b = document.createElement('div');
+    b.className = 'ans g' + i;
+    b.innerHTML = '<span class="sh">' + ICON[i] + '</span><span>' + (i + 1) + '. ' + String(a.answer || '').replace(/</g, '&lt;') + '</span>';
+    b.onclick = () => { players.forEach(p => { p.answered = false; p.answer(i); }); b.classList.add('hit'); };
     box.appendChild(b);
   });
-  const k=(c.answers||[]).findIndex(a=>a.correct);
-  if(k>=0&&!$('#auto').checked&&box.children[k]) box.children[k].classList.add('hit');
-  if($('#tts').checked&&c.question){ try{ speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(c.question)); }catch(e){} }
-  beep(880,0.12);
-  const secs=c.time||20, started=Date.now();
+  const k = (c.answers || []).findIndex(a => a.correct);
+  if (k >= 0 && !$('#auto').checked && box.children[k]) box.children[k].classList.add('hit');
+  if ($('#tts').checked && c.question) { try { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(c.question)); } catch (e) {} }
+  beep(880, 0.12);
+  const secs = c.time || 20, started = Date.now();
   clearInterval(renderQuestion._t);
-  renderQuestion._t=setInterval(()=>{
-    const left=secs-(Date.now()-started)/1000;
-    $('#qTime').textContent=left>0?left.toFixed(1)+'s':'–';
-    $('#qBar').style.width=Math.max(0,Math.min(100,left/secs*100))+'%';
-    if(left<=0) clearInterval(renderQuestion._t);
-  },100);
+  renderQuestion._t = setInterval(() => {
+    const left = secs - (Date.now() - started) / 1000;
+    $('#qTime').textContent = left > 0 ? left.toFixed(1) + 's' : '–';
+    $('#qBar').style.width = Math.max(0, Math.min(100, left / secs * 100)) + '%';
+    if (left <= 0) clearInterval(renderQuestion._t);
+  }, 100);
 }
-function revealCorrect(ch){
-  Array.from($('#answers').children).forEach((b,i)=>{
-    if(ch&&ch.indexOf(i)>=0) b.classList.add('hit'); else if(ch) b.classList.add('miss');
+function revealCorrect(ch) {
+  Array.from($('#answers').children).forEach((b, i) => {
+    if (ch && ch.indexOf(i) >= 0) b.classList.add('hit'); else if (ch) b.classList.add('miss');
   });
-  beep(1180,0.1);
+  beep(1180, 0.1);
 }
 
 /* ===================== wiring ===================== */
-const pinOk=p=>/^\d{5,9}$/.test(p);
-const pinVal=()=>$('#pin').value.trim();
-function tick(){ const n=players.filter(p=>p.ws&&p.ws.readyState===1).length; pill('#pSock',n+' sockets',n?'ok':''); }
-setInterval(tick,600);
+const pinOk = p => /^\d{5,9}$/.test(p);
+const pinVal = () => $('#pin').value.trim();
+function tick() { const n = players.filter(p => p.ws && p.ws.readyState === 1).length; pill('#pSock', n + ' sockets', n ? 'ok' : ''); }
+setInterval(tick, 600);
 
-$('#pin').addEventListener('input',()=>{ $('#pin').value=$('#pin').value.replace(/\D/g,''); S.set('pin',$('#pin').value); });
-$('#nick').addEventListener('input',()=>S.set('nick',$('#nick').value));
-$('#pin').value=S.get('pin','');
-$('#nick').value=S.get('nick','venice');
-$('#count').value=S.get('count','20');
-$('#cntv').textContent=$('#count').value; $('#cntv2').textContent=$('#count').value;
-$('#count').addEventListener('input',()=>{ $('#cntv').textContent=$('#count').value; $('#cntv2').textContent=$('#count').value; S.set('count',$('#count').value); });
-$$('[data-step]').forEach(b=>b.onclick=()=>{
-  const v=Math.max(1,Math.min(120,(+$('#count').value)+(+b.dataset.step)));
-  $('#count').value=v; $('#count').dispatchEvent(new Event('input'));
+$('#pin').addEventListener('input', () => { $('#pin').value = $('#pin').value.replace(/\D/g, ''); S.set('pin', $('#pin').value); });
+$('#nick').addEventListener('input', () => S.set('nick', $('#nick').value));
+$('#pin').value = S.get('pin', '');
+$('#nick').value = S.get('nick', 'venice');
+$('#count').value = S.get('count', '20');
+$('#cntv').textContent = $('#count').value; $('#cntv2').textContent = $('#count').value;
+$('#count').addEventListener('input', () => { $('#cntv').textContent = $('#count').value; $('#cntv2').textContent = $('#count').value; S.set('count', $('#count').value); });
+$$('[data-step]').forEach(b => b.onclick = () => {
+  const v = Math.max(1, Math.min(120, (+$('#count').value) + (+b.dataset.step)));
+  $('#count').value = v; $('#count').dispatchEvent(new Event('input'));
 });
-const savedEp=S.get('ep','');
-if(savedEp){ const [sc,h,m]=savedEp.split('|'); if(sc&&h&&m){ EP={scheme:sc,host:h,mode:m}; pill('#pEp',sc+'://'+h+' '+m,'ok'); } }
-$('#acc').addEventListener('input',()=>$('#accv').textContent=$('#acc').value+'%');
-$('#delay').addEventListener('input',()=>$('#dlv').textContent=$('#delay').value+' ms');
+const savedEp = S.get('ep', '');
+if (savedEp) { const [sc, h, m] = savedEp.split('|'); if (sc && h && m) { EP = { scheme: sc, host: h, mode: m }; pill('#pEp', sc + '://' + h + ' ' + m, 'ok'); } }
+$('#acc').addEventListener('input', () => $('#accv').textContent = $('#acc').value + '%');
+$('#delay').addEventListener('input', () => $('#dlv').textContent = $('#delay').value + ' ms');
 
-function soloOpts(){
+function soloOpts() {
   return {
-    join:pl=>{ log('JOINED as "'+pl.name+'"','ok'); pill('#pTok','in game','ok'); banner('You are in as '+pl.name+'.','ok'); beep(660,0.12); },
-    fail:(pl,e)=>log('login rejected: '+e,'err'),
-    question:(pl,c)=>{
+    join: pl => { log('JOINED as "' + pl.name + '"', 'ok'); pill('#pTok', 'in game', 'ok'); banner('You are in as ' + pl.name + '.', 'ok'); beep(660, 0.12); },
+    fail: (pl, e) => log('login rejected: ' + e, 'err'),
+    question: (pl, c) => {
       renderQuestion(c);
-      const a=(c&&c.quizQuestionAnswers)||[];
-      let k=0; a.forEach((v,n)=>{ if(v>a[k]) k=n; });
-      log('Q'+((c.questionIndex||0)+1)+' correct='+'ABCD'[k]+' '+JSON.stringify(a),'mag');
+      const a = (c && c.quizQuestionAnswers) || [];
+      let k = 0; a.forEach((v, n) => { if (v > a[k]) k = n; });
+      log('Q' + ((c.questionIndex || 0) + 1) + ' correct=' + 'ABCD'[k] + ' ' + JSON.stringify(a), 'mag');
     },
-    event:(pl,t,c)=>{
-      if(t==='answer_reveal'&&c) revealCorrect(c.correctChoices);
-      if(t==='game_over'){ log('game over','ok'); banner('Game over.','ok'); }
-      if(t==='question_end') clearInterval(renderQuestion._t);
+    event: (pl, t, c) => {
+      if (t === 'answer_reveal' && c) revealCorrect(c.correctChoices);
+      if (t === 'game_over') { log('game over', 'ok'); banner('Game over.', 'ok'); }
+      if (t === 'question_end') clearInterval(renderQuestion._t);
     },
-    answer:(pl,i)=>{ if(pl===solo) log('answered '+'ABCD'[i],'inf'); },
-    close:()=>{}
+    answer: (pl, i) => { if (pl === solo) log('answered ' + 'ABCD'[i], 'inf'); },
+    close: () => {}
   };
 }
-async function armJoin(){
-  const p=pinVal();
-  if(!pinOk(p)) return banner('Enter a 5-9 digit game PIN first.','warn');
-  stopAll(); armOn=true;
-  banner('Connecting… retries by itself until the game is live.','warn');
-  pill('#pTok','arming','warn');
-  let tries=0;
-  while(armOn){
-    try{
-      const tk=await resolveToken(p,$('#tok').value.trim()||null);
-      if(!armOn) return;
-      solo=new Player(p,$('#nick').value.trim()||'venice',tk,soloOpts());
+async function armJoin() {
+  const p = pinVal();
+  if (!pinOk(p)) return banner('Enter a 5-9 digit game PIN first.', 'warn');
+  stopAll(); armOn = true;
+  banner('Connecting… retries by itself until the game is live.', 'warn');
+  pill('#pTok', 'arming', 'warn');
+  let tries = 0;
+  while (armOn) {
+    try {
+      const tk = await resolveToken(p, $('#tok').value.trim() || null);
+      if (!armOn) return;
+      solo = new Player(p, $('#nick').value.trim() || 'venice', tk, soloOpts());
       players.push(solo);
       await solo.connect();
-      solo.on.close=()=>{ if(!solo.dead&&armOn){ log('socket dropped — reconnecting','warn'); armJoin(); } };
+      solo.on.close = () => { if (!solo.dead && armOn) { log('socket dropped — reconnecting', 'warn'); armJoin(); } };
       return;
-    }catch(e){
+    } catch (e) {
       tries++;
-      log('attempt '+tries+': '+e.message,'warn');
+      log('attempt ' + tries + ': ' + e.message, 'warn');
       if (tries >= 3) {
-        banner('Connection failed after 3 attempts. Try a different PIN or manual token.','bad');
+        banner('Connection failed after 3 attempts. Try a manual token or different PIN.', 'bad');
         return;
       }
-      banner('Not in yet — retrying in 3s…','warn');
+      banner('Not in yet — retrying in 3s…', 'warn');
       await sleep(3000);
     }
   }
 }
-$('#join').onclick=armJoin;
+$('#join').onclick = armJoin;
 
-async function swarm(){
-  const p=pinVal();
-  if(!pinOk(p)) return banner('Enter a PIN first.','warn');
-  stopAll(); armOn=false;
-  const n=Math.max(1,Math.min(120,+$('#count').value));
-  const base=($('#nick').value.trim()||'bot').slice(0,10);
-  pill('#pTok','arming','warn');
+async function swarm() {
+  const p = pinVal();
+  if (!pinOk(p)) return banner('Enter a PIN first.', 'warn');
+  stopAll(); armOn = false;
+  const n = Math.max(1, Math.min(120, +$('#count').value));
+  const base = ($('#nick').value.trim() || 'bot').slice(0, 10);
+  pill('#pTok', 'arming', 'warn');
   let tk;
-  try{ tk=await resolveToken(p,$('#tok').value.trim()||null); }
-  catch(e){ banner('Swarm aborted: '+e.message,'bad'); return log('swarm aborted: '+e.message,'err'); }
-  banner('Spawning '+n+' bots…','warn');
-  let ok=0,bad=0; const jobs=[];
-  for(let i=0;i<n;i++){
+  try { tk = await resolveToken(p, $('#tok').value.trim() || null); }
+  catch (e) { banner('Swarm aborted: ' + e.message, 'bad'); return log('swarm aborted: ' + e.message, 'err'); }
+  banner('Spawning ' + n + ' bots…', 'warn');
+  let ok = 0, bad = 0; const jobs = [];
+  for (let i = 0; i < n; i++) {
     await sleep(15);
-    const name=$('#uniq').checked?base+i:base;
-    const pl=new Player(p,name,tk,{
-      join:()=>{ ok++; tick(); if(ok%10===0) log('bots in '+ok+'/'+n,'ok'); },
-      fail:(x,e)=>log('bot rejected: '+e,'warn')
+    const name = $('#uniq').checked ? base + i : base;
+    const pl = new Player(p, name, tk, {
+      join: () => { ok++; tick(); if (ok % 10 === 0) log('bots in ' + ok + '/' + n, 'ok'); },
+      fail: (x, e) => log('bot rejected: ' + e, 'warn')
     });
     players.push(pl);
-    jobs.push(pl.connect().catch(e=>{ bad++; if(bad<=3) log('bot fail: '+e.message,'err'); }));
+    jobs.push(pl.connect().catch(e => { bad++; if (bad <= 3) log('bot fail: ' + e.message, 'err'); }));
   }
   await Promise.all(jobs);
-  log('swarm done — '+ok+' in, '+bad+' failed',ok?'ok':'err');
-  banner(ok?ok+' bots are in the game.':'No bots joined.',ok?'ok':'bad');
+  log('swarm done — ' + ok + ' in, ' + bad + ' failed', ok ? 'ok' : 'err');
+  banner(ok ? ok + ' bots are in the game.' : 'No bots joined.', ok ? 'ok' : 'bad');
 }
-$('#swarm').onclick=swarm; $('#swarm2').onclick=swarm;
+$('#swarm').onclick = swarm; $('#swarm2').onclick = swarm;
 
-async function boot(times){
-  const p=pinVal();
-  if(!pinOk(p)) return banner('Enter a PIN first.','warn');
-  const name=($('#target').value.trim()||$('#nick').value.trim()||'venice').slice(0,15);
-  let tk=LOCKED;
-  if(!tk){ try{ tk=await resolveToken(p,$('#tok').value.trim()||null); }catch(e){ return log('boot aborted: '+e.message,'err'); } }
-  log('booting "'+name+'" ×'+times,'inf');
-  for(let i=0;i<times;i++){
-    const pl=new Player(p,name,tk,{
-      join:()=>{ log('booted as '+name,'ok'); tick(); },
-      fail:(x,e)=>log('boot rejected: '+e,'warn')
+async function boot(times) {
+  const p = pinVal();
+  if (!pinOk(p)) return banner('Enter a PIN first.', 'warn');
+  const name = ($('#target').value.trim() || $('#nick').value.trim() || 'venice').slice(0, 15);
+  let tk = LOCKED;
+  if (!tk) { try { tk = await resolveToken(p, $('#tok').value.trim() || null); } catch (e) { return log('boot aborted: ' + e.message, 'err'); } }
+  log('booting "' + name + '" ×' + times, 'inf');
+  for (let i = 0; i < times; i++) {
+    const pl = new Player(p, name, tk, {
+      join: () => { log('booted as ' + name, 'ok'); tick(); },
+      fail: (x, e) => log('boot rejected: ' + e, 'warn')
     });
     players.push(pl);
-    pl.connect().catch(e=>log('boot fail: '+e.message,'err'));
+    pl.connect().catch(e => log('boot fail: ' + e.message, 'err'));
     await sleep(150);
   }
-  banner('Booted '+name+' ×'+times+'.','ok');
+  banner('Booted ' + name + ' ×' + times + '.', 'ok');
 }
-$('#boot1').onclick=()=>boot(1);
-$('#boot5').onclick=()=>boot(5);
-$('#boot20').onclick=()=>boot(20);
+$('#boot1').onclick = () => boot(1);
+$('#boot5').onclick = () => boot(5);
+$('#boot20').onclick = () => boot(20);
 
-$('#rejoin').onclick=()=>{
-  const dead=players.filter(p=>!p.joined);
-  dead.forEach(p=>{ p.dead=false; p.connect().catch(()=>{}); });
-  log('rejoining '+dead.length,'inf');
+$('#rejoin').onclick = () => {
+  const dead = players.filter(p => !p.joined);
+  dead.forEach(p => { p.dead = false; p.connect().catch(() => {}); });
+  log('rejoining ' + dead.length, 'inf');
 };
-function stopAll(){
-  armOn=false;
-  players.forEach(p=>p.close());
-  players=[]; solo=null;
+function stopAll() {
+  armOn = false;
+  players.forEach(p => p.close());
+  players = []; solo = null;
   clearInterval(renderQuestion._t);
-  $('#qText').textContent='waiting for a game…';
-  $('#qIdx').textContent='–'; $('#qTime').textContent='–'; $('#qBar').style.width='0';
-  $('#answers').innerHTML='';
-  tick(); pill('#pTok','token idle'); log('stopped','warn');
+  $('#qText').textContent = 'waiting for a game…';
+  $('#qIdx').textContent = '–'; $('#qTime').textContent = '–'; $('#qBar').style.width = '0';
+  $('#answers').innerHTML = '';
+  tick(); pill('#pTok', 'token idle'); log('stopped', 'warn');
 }
-$('#stop').onclick=()=>{ stopAll(); banner(''); };
-$('#fc').onclick=()=>players.forEach(p=>{ p.answered=false; p.autoAnswer(); });
-$('#fr').onclick=()=>players.forEach(p=>{ p.answered=false; p.answer(Math.floor(Math.random()*4)); });
+$('#stop').onclick = () => { stopAll(); banner(''); };
+$('#fc').onclick = () => players.forEach(p => { p.answered = false; p.autoAnswer(); });
+$('#fr').onclick = () => players.forEach(p => { p.answered = false; p.answer(Math.floor(Math.random() * 4)); });
 
-function doBlast(t){ if(!t) return; players.forEach(p=>p.blast(t)); log('blast → "'+t+'" ×'+players.length,'mag'); }
-$('#blastGo').onclick=()=>doBlast($('#blast').value.trim());
-$('#blast5').onclick=async()=>{ for(let i=0;i<5;i++){ doBlast($('#blast').value.trim()); await sleep(220); } };
-$('#blast20').onclick=async()=>{ for(let i=0;i<20;i++){ doBlast($('#blast').value.trim()); await sleep(150); } };
-$$('[data-b]').forEach(b=>b.onclick=()=>doBlast(b.dataset.b));
-$('#chaos').onclick=async()=>{
-  const t=$('#blast').value.trim()||'venice was here';
-  beep(440,0.2,'square');
-  if(!$('#ytw').innerHTML) $('#ytPlay').click();
-  for(let i=0;i<8;i++){ doBlast(t); await sleep(170); }
-  players.forEach(p=>{ p.answered=false; p.answer(Math.floor(Math.random()*4)); });
-  banner('Chaos deployed.','ok'); log('chaos','mag');
+function doBlast(t) { if (!t) return; players.forEach(p => p.blast(t)); log('blast → "' + t + '" ×' + players.length, 'mag'); }
+$('#blastGo').onclick = () => doBlast($('#blast').value.trim());
+$('#blast5').onclick = async () => { for (let i = 0; i < 5; i++) { doBlast($('#blast').value.trim()); await sleep(220); } };
+$('#blast20').onclick = async () => { for (let i = 0; i < 20; i++) { doBlast($('#blast').value.trim()); await sleep(150); } };
+$$('[data-b]').forEach(b => b.onclick = () => doBlast(b.dataset.b));
+$('#chaos').onclick = async () => {
+  const t = $('#blast').value.trim() || 'venice was here';
+  beep(440, 0.2, 'square');
+  if (!$('#ytw').innerHTML) $('#ytPlay').click();
+  for (let i = 0; i < 8; i++) { doBlast(t); await sleep(170); }
+  players.forEach(p => { p.answered = false; p.answer(Math.floor(Math.random() * 4)); });
+  banner('Chaos deployed.', 'ok'); log('chaos', 'mag');
 };
-function ytId(s){
-  s=String(s||'').trim();
-  const m=s.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/);
-  return m?m[1]:(/^[A-Za-z0-9_-]{6,}$/.test(s)?s:null);
+function ytId(s) {
+  s = String(s || '').trim();
+  const m = s.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : (/^[A-Za-z0-9_-]{6,}$/.test(s) ? s : null);
 }
-$('#ytPlay').onclick=()=>{
-  const id=ytId($('#yt').value); if(!id) return log('bad youtube id','warn');
-  const w=$('#ytw'); w.innerHTML='';
-  const f=document.createElement('iframe');
-  f.setAttribute('allow','autoplay; encrypted-media'); f.setAttribute('allowfullscreen','');
-  f.src='https://www.youtube.com/embed/'+id+'?autoplay=1&controls=0&rel=0'+($('#ytLoop').checked?'&loop=1&playlist='+id:'');
-  w.appendChild(f); log('youtube '+id,'ok');
+$('#ytPlay').onclick = () => {
+  const id = ytId($('#yt').value); if (!id) return log('bad youtube id', 'warn');
+  const w = $('#ytw'); w.innerHTML = '';
+  const f = document.createElement('iframe');
+  f.setAttribute('allow', 'autoplay; encrypted-media'); f.setAttribute('allowfullscreen', '');
+  f.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&controls=0&rel=0' + ($('#ytLoop').checked ? '&loop=1&playlist=' + id : '');
+  w.appendChild(f); log('youtube ' + id, 'ok');
 };
-$('#ytStop').onclick=()=>{ $('#ytw').innerHTML=''; };
-$('#rgo').onclick=()=>{
-  let data; try{ data=JSON.parse($('#rdata').value); }catch(e){ return log('raw bad json: '+e.message,'err'); }
-  players.forEach(p=>p.raw($('#rchan').value,data));
-  log('published raw ×'+players.length,'mag');
+$('#ytStop').onclick = () => { $('#ytw').innerHTML = ''; };
+$('#rgo').onclick = () => {
+  let data; try { data = JSON.parse($('#rdata').value); } catch (e) { return log('raw bad json: ' + e.message, 'err'); }
+  players.forEach(p => p.raw($('#rchan').value, data));
+  log('published raw ×' + players.length, 'mag');
 };
-$('#wstest').onclick=wsTest;
-$('#diag').onclick=async()=>{
-  const p=pinVal();
-  if(!pinOk(p)) return banner('Enter a PIN first.','warn');
-  banner('Diagnosing…','warn');
-  try{ const tk=await resolveToken(p,$('#tok').value.trim()||null); banner('Link works — token accepted on '+EP.host+'.','ok'); }
-  catch(e){ banner('Diagnose: '+e.message,'bad'); log('DIAGNOSE: '+e.message,'err'); }
+$('#wstest').onclick = wsTest;
+$('#diag').onclick = async () => {
+  const p = pinVal();
+  if (!pinOk(p)) return banner('Enter a PIN first.', 'warn');
+  banner('Diagnosing…', 'warn');
+  try { const tk = await resolveToken(p, $('#tok').value.trim() || null); banner('Link works — token accepted on ' + EP.host + '.', 'ok'); }
+  catch (e) { banner('Diagnose: ' + e.message, 'bad'); log('DIAGNOSE: ' + e.message, 'err'); }
 };
-$('#tokClear').onclick=()=>{ $('#tok').value=''; $('#tokView').textContent=''; log('token box cleared','warn'); };
-$('#epClear').onclick=()=>{ S.del('ep'); EP={scheme:'wss',host:'kahoot.it',mode:'enc'}; pill('#pEp','endpoint reset','warn'); };
-$('#copy').onclick=()=>{
-  const pr=(navigator.clipboard&&navigator.clipboard.writeText(logEl.innerText))||Promise.reject();
-  pr.then(()=>log('copied','ok')).catch(()=>log('clipboard blocked','warn'));
+$('#tokClear').onclick = () => { $('#tok').value = ''; $('#tokView').textContent = ''; log('token box cleared', 'warn'); };
+$('#epClear').onclick = () => { S.del('ep'); EP = { scheme: 'wss', host: 'kahoot.it', mode: 'enc' }; pill('#pEp', 'endpoint reset', 'warn'); };
+$('#copy').onclick = () => {
+  const pr = (navigator.clipboard && navigator.clipboard.writeText(logEl.innerText)) || Promise.reject();
+  pr.then(() => log('copied', 'ok')).catch(() => log('clipboard blocked', 'warn'));
 };
-$('#clr').onclick=()=>{ logEl.innerHTML=''; };
-$$('.tabbar button').forEach(b=>b.onclick=()=>{
-  $$('.tabbar button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
-  $$('.page').forEach(p=>p.classList.toggle('on',p.id==='page-'+b.dataset.tab));
+$('#clr').onclick = () => { logEl.innerHTML = ''; };
+$$('.tabbar button').forEach(b => b.onclick = () => {
+  $$('.tabbar button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+  $$('.page').forEach(p => p.classList.toggle('on', p.id === 'page-' + b.dataset.tab));
 });
 
-log('ready. type a PIN, tap Join.','ok');
-pill('#pTok','token idle');
+log('ready. type a PIN, tap Join.', 'ok');
+pill('#pTok', 'token idle');
 wsTest();
 </script>
 </body>
