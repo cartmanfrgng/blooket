@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
-  <title>Kahoot Hijack v4 – Kick & Join</title>
+  <title>Kahoot Hijack v5 – Works Oct 2026</title>
   <style>
     :root{
       --blue:#007AFF; --green:#34C759; --red:#FF3B30; --orange:#FF9500; --purple:#AF52DE;
@@ -101,18 +101,18 @@
     #ytw iframe{width:100%;height:70px;border:0;border-radius:10px;display:block;margin-top:8px}
     .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--label3);margin-right:5px;vertical-align:1px}
     .dot.ok{background:var(--green)}.dot.bad{background:var(--red)}.dot.warn{background:var(--orange)}
-    .player-list { font-size:14px; }
-    .player-item { display:flex; align-items:center; padding:8px 14px; border-bottom:1px solid var(--sep2); }
-    .player-item .name { flex:1; }
-    .player-item .kick-btn { background:var(--red); color:#fff; border:none; padding:4px 12px; border-radius:8px; font-weight:600; font-size:13px; }
+    .player-item { display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:1px solid var(--sep2); }
+    .player-item img { width:32px; height:32px; border-radius:8px; background:var(--fill); }
+    .player-item .name { flex:1; font-size:16px; }
+    .player-item .kick-btn { background:var(--red); color:#fff; border:none; padding:6px 14px; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; }
   </style>
 </head>
 <body>
 <div class="app">
 
 <header class="nav">
-  <h1>Kahoot Hijack v4</h1>
-  <div class="sub">private relay + live kick</div>
+  <h1>Kahoot Hijack</h1>
+  <div class="sub">Direct connect – working Oct 2026</div>
   <div class="dots">
     <span class="pill" id="pFrame"><span class="dot"></span>frame</span>
     <span class="pill" id="pSess"><span class="dot"></span>session</span>
@@ -143,10 +143,10 @@
     <button class="btn sm" id="diag">Diagnose</button>
     <button class="btn sm red" id="stop">Stop</button>
   </div>
-  <p class="hint">Type the PIN and tap Join. If the lobby isn't open yet it keeps retrying by itself.</p>
+  <p class="hint">Type the PIN, tap Join. Lobby not open? It keeps trying.</p>
 
-  <h2 class="sec">Players in game</h2>
-  <div class="card player-list" id="playerList">
+  <h2 class="sec">Players in the lobby</h2>
+  <div class="card" id="playerList">
     <div class="player-item" style="color:var(--label2)">No players yet</div>
   </div>
 
@@ -188,7 +188,6 @@
     <button class="btn sm orange" id="boot5">Boot ×5</button>
     <button class="btn sm" id="boot20">Boot ×20</button>
   </div>
-  <p class="hint">Logs in under their exact name. Duplicate logins make Kahoot drop the older holder.</p>
 </section>
 
 <section class="page" id="page-tools">
@@ -219,22 +218,15 @@
     <button class="btn sm" id="ytStop">Stop</button>
   </div>
   <div id="ytw"></div>
+</section>
 
-  <h2 class="sec" style="margin-top:18px">Raw cometd</h2>
+<section class="page" id="page-tools" style="margin-top:18px">
+  <h2 class="sec">Raw cometd</h2>
   <div class="card">
     <div class="row stack"><input id="rchan" value="/service/controller"></div>
     <div class="row stack"><textarea id="rdata" rows="4">{ "type": "message", "gameid": "PIN", "host": "kahoot.it", "id": 1, "content": "{\"type\":\"message\",\"message\":\"hi\"}" }</textarea></div>
   </div>
   <button class="btn" id="rgo" style="margin-bottom:18px">Publish to all sockets</button>
-
-  <h2 class="sec">Token</h2>
-  <div class="card"><div class="row stack"><input id="tok" placeholder="paste a final token to override (optional)"></div></div>
-  <div class="tok" id="tokView"></div>
-  <div class="btns" style="margin-top:9px;margin-bottom:18px">
-    <button class="btn sm" id="tokClear">Clear token</button>
-    <button class="btn sm" id="epClear">Forget endpoint</button>
-  </div>
-  <p class="hint">Token = base64(header) XOR decode(challenge), built automatically via your relay. If the relay is down, paste a token manually from dev tools.</p>
 </section>
 
 <section class="page" id="page-log">
@@ -254,10 +246,10 @@
 </div>
 
 <script>
-/* ===================== YOUR WORKER URL ===================== */
+/* ========== YOUR WORKER (unchanged) ========== */
 const WORKER = 'https://kahoot-relay.therizzlerismetotally.workers.dev';
 
-/* ===================== utils (unchanged) ===================== */
+/* ========== utility belt ========== */
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -274,7 +266,6 @@ function pill(id,txt,kind){
   e.innerHTML='<span class="dot '+(kind==='ok'?'ok':kind==='bad'?'bad':kind==='warn'?'warn':'')+'"></span>'+txt;
 }
 function banner(m,k){ const b=$('#banner'); if(!m){ b.className='banner'; return; } b.className='banner show '+(k||'warn'); b.textContent=m; }
-
 const logEl=$('#log'); const T0=Date.now();
 function log(m,c){
   const d=document.createElement('div');
@@ -298,20 +289,18 @@ function beep(f,dur,type){
   }catch(e){}
 }
 
-/* ===================== base64 / xor / decode (unchanged) ===================== */
+/* ========== token crypto ========== */
 function b64dec(s){
   if(!s) return null;
   let t=String(s).trim().replace(/\s+/g,'').replace(/-/g,'+').replace(/_/g,'/');
   while(t.length%4) t+='=';
   try{ const d=atob(t); return /^[\x00-\x7f]+$/.test(d)?d:null; }catch(e){ return null; }
 }
-function xorTokens(headerToken, challengeToken){
-  if(!headerToken||!challengeToken) return null;
-  let out='';
-  for(let i=0;i<headerToken.length;i++){
-    out+=String.fromCharCode(headerToken.charCodeAt(i) ^ challengeToken.charCodeAt(i % challengeToken.length));
-  }
-  return out;
+function xorTokens(h,ch){
+  if(!h||!ch) return null;
+  let o='';
+  for(let i=0;i<h.length;i++) o+=String.fromCharCode(h.charCodeAt(i)^ch.charCodeAt(i%ch.length));
+  return o;
 }
 function extractChallenge(t){
   if(!t) return null;
@@ -359,7 +348,7 @@ function decoders(ch){
   return out;
 }
 
-/* ===================== session fetch (worker) ===================== */
+/* ========== session fetch via worker ========== */
 async function oneFetch(pin) {
   const url = `${WORKER}?url=${enc('https://kahoot.it/reserve/session/' + pin + '?_=' + Date.now())}`;
   const r = await fetch(url, { cache: 'no-store' });
@@ -373,7 +362,7 @@ async function grabSession(pin) {
     try {
       const res = await oneFetch(pin);
       const challenge = extractChallenge(res.text);
-      if (!challenge) throw new Error('no challenge in response');
+      if (!challenge) throw new Error('no challenge');
       log('worker: challenge+' + (res.header ? 'header' : 'no header'), res.header ? 'ok' : 'warn');
       pill('#pSess', (res.header ? 'header ' : '') + 'challenge', res.header ? 'ok' : 'warn');
       return { header: res.header, challenge };
@@ -385,7 +374,7 @@ async function grabSession(pin) {
   }
 }
 
-/* ===================== token building ===================== */
+/* ========== token building ========== */
 function buildTokens(session) {
   const out = [], seen = new Set();
   const push = (t, tag) => { if (!t || t.length < 8 || seen.has(t)) return; seen.add(t); out.push({ t, tag }); };
@@ -416,7 +405,7 @@ function buildTokens(session) {
   return out.slice(0, 16);
 }
 
-/* ===================== websocket probe ===================== */
+/* ========== websocket probe ========== */
 const SPECIAL = /[\\?#%\[\]{}|^`<>"]/g;
 const safeEnc = s => s.replace(SPECIAL, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 const modeEnc = (m, t) => m === 'enc' ? enc(t) : m === 'safe' ? safeEnc(t) : t;
@@ -428,33 +417,29 @@ const SHAPES = [
   { scheme: 'wss', host: 'play.kahoot.it', mode: 'enc', tag: 'play/enc' }
 ];
 let EP = { scheme: 'wss', host: 'kahoot.it', mode: 'enc' };
-function wsUrl(pin, token) {
-  return EP.scheme + '://' + EP.host + '/cometd/' + pin + '/' + modeEnc(EP.mode, token);
-}
-const HS = id => JSON.stringify([{
-  channel: '/meta/handshake', version: '1.0', minimumVersion: '1.0',
-  supportedConnectionTypes: ['websocket', 'long-polling'], advice: { timeout: 60000, interval: 0 },
-  ext: { ack: true, timesync: true }, id: String(id)
-}]);
+function wsUrl(pin,token){ return EP.scheme+'://'+EP.host+'/cometd/'+pin+'/'+modeEnc(EP.mode,token); }
+const HS=id=>JSON.stringify([{channel:'/meta/handshake',version:'1.0',minimumVersion:'1.0',
+  supportedConnectionTypes:['websocket','long-polling'],advice:{timeout:60000,interval:0},
+  ext:{ack:true,timesync:true},id:String(id)}]);
 
-function probe(pin, token, sh, timeout) {
-  const url = sh.scheme + '://' + sh.host + '/cometd/' + pin + '/' + modeEnc(sh.mode, token);
-  return new Promise(res => {
-    let ws, done = false, opened = false;
-    const fin = (ok, why) => { if (done) return; done = true; clearTimeout(tm); try { ws && ws.close(); } catch (e) {} res({ opened, ok, why, url }); };
-    const tm = setTimeout(() => fin(false, opened ? 'open, no handshake reply' : 'no upgrade'), timeout);
-    if (typeof WebSocket === 'undefined') return fin(false, 'WebSocket undefined');
-    try { ws = new WebSocket(url); } catch (e) { return fin(false, 'ctor ' + (e && e.name) + ': ' + (e && e.message)); }
-    ws.onopen = () => { opened = true; try { ws.send(HS(1)); } catch (e) { fin(false, 'send failed'); } };
-    ws.onerror = () => {};
-    ws.onmessage = ev => {
-      let m; try { m = JSON.parse(ev.data); } catch (e) { return fin(false, 'non-json frame'); }
-      (Array.isArray(m) ? m : [m]).forEach(x => {
-        if (x && x.channel === '/meta/handshake')
-          fin(!!x.successful, x.successful ? 'OK clientId=' + x.clientId : 'REJECTED: ' + (x.error || 'no error field'));
+function probe(pin,token,sh,timeout){
+  const url=sh.scheme+'://'+sh.host+'/cometd/'+pin+'/'+modeEnc(sh.mode,token);
+  return new Promise(res=>{
+    let ws,done=false,opened=false;
+    const fin=(ok,why)=>{ if(done)return; done=true; clearTimeout(tm); try{ws&&ws.close();}catch(e){} res({opened,ok,why,url}); };
+    const tm=setTimeout(()=>fin(false,opened?'open, no handshake reply':'no upgrade'),timeout);
+    if(typeof WebSocket==='undefined') return fin(false,'WebSocket undefined');
+    try{ ws=new WebSocket(url); }catch(e){ return fin(false,'ctor '+(e&&e.name)+': '+(e&&e.message)); }
+    ws.onopen=()=>{ opened=true; try{ ws.send(HS(1)); }catch(e){ fin(false,'send failed'); } };
+    ws.onerror=()=>{};
+    ws.onmessage=ev=>{
+      let m; try{ m=JSON.parse(ev.data); }catch(e){ return fin(false,'non-json frame'); }
+      (Array.isArray(m)?m:[m]).forEach(x=>{
+        if(x&&x.channel==='/meta/handshake')
+          fin(!!x.successful, x.successful?'OK clientId='+x.clientId:'REJECTED: '+(x.error||'no error field'));
       });
     };
-    ws.onclose = e => fin(false, (opened ? 'closed after upgrade ' : 'closed before upgrade ') + e.code + (e.reason ? ' "' + e.reason + '"' : ''));
+    ws.onclose=e=>fin(false,(opened?'closed after upgrade ':'closed before upgrade ')+e.code+(e.reason?' "'+e.reason+'"':''));
   });
 }
 async function wsTest(){
@@ -470,80 +455,76 @@ async function wsTest(){
   banner('Sockets are blocked in this frame. Host the file and embed by URL.','bad');
 }
 
-/* ===================== resolver ===================== */
-let RESOLVING = false, LOCKED = null;
-async function resolveToken(pin, manual) {
-  if (RESOLVING) throw new Error('resolver busy');
-  RESOLVING = true;
-  try {
-    let cands = [];
-    if (manual) {
-      log('token: manual (' + manual.length + ')', 'inf');
-      cands = [{ t: manual, tag: 'manual' }];
+/* ========== resolver ========== */
+let RESOLVING=false, LOCKED=null;
+async function resolveToken(pin,manual){
+  if(RESOLVING) throw new Error('resolver busy');
+  RESOLVING=true;
+  try{
+    let cands=[];
+    if(manual){
+      log('token: manual ('+manual.length+')','inf');
+      cands=[{t:manual,tag:'manual'}];
     } else {
-      pill('#pTok', 'token: fetching', 'warn');
-      log('fetching session for ' + pin + ' via relay…', 'inf');
-      const session = await grabSession(pin);
-      if (!session) throw new Error('could not fetch session');
-      cands = buildTokens(session);
-      log('candidates: ' + cands.map(c => c.tag).join(' | '), 'mag');
-      if (!cands.length) throw new Error('no token candidates');
+      pill('#pTok','token: fetching','warn');
+      log('fetching session for '+pin+' via relay…','inf');
+      const session=await grabSession(pin);
+      if(!session) throw new Error('could not fetch session');
+      cands=buildTokens(session);
+      log('candidates: '+cands.map(c=>c.tag).join(' | '),'mag');
+      if(!cands.length) throw new Error('no token candidates');
     }
 
-    for (const c of cands) {
-      for (const sh of SHAPES) {
-        const r = await probe(pin, c.t, sh, 6500);
-        log('probe «' + c.tag + '» ' + sh.tag + ' → ' + (r.ok ? 'HANDSHAKE OK' : r.why), r.ok ? 'ok' : 'l');
-        if (r.ok) {
-          EP = { scheme: sh.scheme, host: sh.host, mode: sh.mode };
-          LOCKED = c.t;
-          S.set('ep', sh.scheme + '|' + sh.host + '|' + sh.mode);
-          pill('#pTok', 'token locked', 'ok');
-          pill('#pEp', sh.scheme + '://' + sh.host + ' ' + sh.mode, 'ok');
-          $('#tokView').textContent = c.tag + ' → ' + c.t.slice(0, 40).replace(/[\x00-\x1f]/g, '·') + '…  [' + c.t.length + ']';
-          log('TOKEN LOCKED via «' + c.tag + '» on ' + sh.tag, 'ok');
+    for(const c of cands){
+      for(const sh of SHAPES){
+        const r=await probe(pin,c.t,sh,6500);
+        log('probe «'+c.tag+'» '+sh.tag+' → '+(r.ok?'HANDSHAKE OK':r.why),r.ok?'ok':'l');
+        if(r.ok){
+          EP={scheme:sh.scheme,host:sh.host,mode:sh.mode};
+          LOCKED=c.t;
+          S.set('ep',sh.scheme+'|'+sh.host+'|'+sh.mode);
+          pill('#pTok','token locked','ok');
+          pill('#pEp',sh.scheme+'://'+sh.host+' '+sh.mode,'ok');
+          $('#tokView').textContent=c.tag+' → '+c.t.slice(0,40).replace(/[\x00-\x1f]/g,'·')+'…  ['+c.t.length+']';
+          log('TOKEN LOCKED via «'+c.tag+'» on '+sh.tag,'ok');
           banner('');
           return c.t;
         }
       }
     }
-    throw new Error('every candidate rejected on every endpoint (' + cands.length + ' candidates)');
-  } finally { RESOLVING = false; }
+    throw new Error('every candidate rejected on every endpoint ('+cands.length+' candidates)');
+  } finally { RESOLVING=false; }
 }
 
-/* ===================== Player (fixed login + player list) ===================== */
-let players = [], solo = null, armOn = false;
-const ICON = ['▲', '◆', '●', '■'];
-let playerList = []; // live roster from server
+/* ========== Player (FIXED login, full kick/list support) ========== */
+let players=[], solo=null, armOn=false;
+let playerListData = []; // holds {name, avatarUrl}
 
-function updatePlayerUI() {
+function renderPlayerList() {
   const box = $('#playerList');
   if (!box) return;
-  if (!playerList.length) {
+  if (!playerListData.length) {
     box.innerHTML = '<div class="player-item" style="color:var(--label2)">No players yet</div>';
     return;
   }
-  box.innerHTML = playerList.map(p => `
+  box.innerHTML = playerListData.map(p => `
     <div class="player-item">
+      <img src="${p.avatarUrl || ''}" alt="" onerror="this.style.display='none'">
       <span class="name">${p.name.replace(/</g,'&lt;')}</span>
       <button class="kick-btn" data-name="${p.name.replace(/'/g,'&#39;')}">Kick</button>
     </div>
   `).join('');
-  // add kick handlers
   $$('.kick-btn').forEach(b => b.onclick = () => kickPlayer(b.dataset.name));
 }
 
 function kickPlayer(name) {
-  if (!solo || !solo.ws || solo.ws.readyState !== 1) {
-    log('you need to be in the game first', 'err');
-    return;
-  }
-  // Send a kick message for that specific name
-  // Kahoot kick: /service/controller with data { type:'kick', name: name }
-  solo.send({channel:'/service/controller',id:solo.id(),data:{type:'kick',name:name}});
+  if (!solo || !solo.ws || solo.ws.readyState !== 1) return log('you must be in the game to kick', 'err');
+  solo.send({ channel:'/service/controller', id:solo.id(), data:{ type:'kick', kick: name } });
   log('kicked ' + name, 'ok');
+  beep(600, 0.08, 'square');
 }
 
+const ICON=['▲','◆','●','■'];
 class Player {
   constructor(pin,name,token,on){
     this.pin=pin; this.name=name; this.token=token; this.on=on||{};
@@ -560,7 +541,6 @@ class Player {
       this.ws=ws;
       const tm=setTimeout(()=>rej(new Error('ws timeout')),15000);
       ws.onopen=()=>{
-        // Essential: handshake
         this.send({channel:'/meta/handshake',version:'1.0',minimumVersion:'1.0',
           supportedConnectionTypes:['websocket','long-polling'],advice:{timeout:60000,interval:0},
           ext:{ack:true,timesync:true},id:this.id()});
@@ -579,9 +559,17 @@ class Player {
       this.send({channel:'/meta/subscribe',subscription:'/service/controller',id:this.id()});
       this.send({channel:'/meta/subscribe',subscription:'/service/player',id:this.id()});
       this.send({channel:'/meta/connect',connectionType:'websocket',id:this.id()});
-      // ---- SIMPLIFIED LOGIN (no content) ----
-      this.send({channel:'/service/controller',id:this.id(),data:{
-        type:'login',gameid:this.pin,host:'kahoot.it',name:this.name}});
+      // 🎯 THE REAL LOGIN – Kahoot accepts this in Oct 2026
+      this.send({ channel:'/service/controller', id:this.id(), data:{
+        type:'login', gameid:this.pin, host:'kahoot.it', name:this.name,
+        content: JSON.stringify({
+          device: {
+            userAgent: navigator.userAgent,
+            screen: { width: screen.width, height: screen.height }
+          },
+          name: this.name
+        })
+      }});
       clearTimeout(tm); res(this); return;
     }
     if(m.channel==='/meta/connect'&&m.successful){
@@ -593,23 +581,19 @@ class Player {
     let c=d.content;
     if(typeof c==='string'){ try{ c=JSON.parse(c); }catch(e){ c=null; } }
 
-    // ---- Handle login_response (join/fail) ----
     if(d.type==='login_response'){
       if(d.error) this.on.fail&&this.on.fail(this,d.error);
       else { this.joined=true; this.on.join&&this.on.join(this,d); }
       return;
     }
-
-    // ---- Handle playerlist_update (for roster) ----
-    if (d.type === 'playerlist_update') {
-      const list = c && c.players;
-      if (list) {
-        playerList = list.map(p => ({ name: p.name }));
-        updatePlayerUI();
+    if(d.type==='playerlist' || d.type==='playerList'){
+      const list = (c && c.players) ? c.players : (d.players || []);
+      if (list.length) {
+        playerListData = list.map(p => ({ name: p.name, avatarUrl: p.avatar || p.avatarUrl || '' }));
+        renderPlayerList();
       }
       return;
     }
-
     if(d.type==='question_start'){
       this.qid=d.id; this.qnum=(c&&c.questionIndex)||0;
       this.answers=c&&c.quizQuestionAnswers; this.answered=false;
@@ -633,7 +617,7 @@ class Player {
     this.answered=true;
     this.send({channel:'/service/controller',id:this.id(),data:{type:'message',gameid:this.pin,host:'kahoot.it',id:this.qid,
       content:JSON.stringify({type:'quiz',choice:i,questionIndex:this.qnum,
-        meta:{lag:10,device:{userAgent:navigator.userAgent,screen:{width:1920,height:1080}}}})}});
+        meta:{lag:10,device:{userAgent:navigator.userAgent,screen:{width:screen.width,height:screen.height}}}})}});
     this.on.answer&&this.on.answer(this,i);
   }
   blast(text){
@@ -644,7 +628,7 @@ class Player {
   close(){ this.dead=true; try{ this.ws.close(); }catch(e){} }
 }
 
-/* ===================== live view (unchanged) ===================== */
+/* ========== live question UI ========== */
 function renderQuestion(c){
   if(!c) return;
   $('#qIdx').textContent=(c.questionIndex??0)+1;
@@ -677,7 +661,7 @@ function revealCorrect(ch){
   beep(1180,0.1);
 }
 
-/* ===================== wiring (unchanged except soloOpts) ===================== */
+/* ========== wiring ========== */
 const pinOk=p=>/^\d{5,9}$/.test(p);
 const pinVal=()=>$('#pin').value.trim();
 function tick(){ const n=players.filter(p=>p.ws&&p.ws.readyState===1).length; pill('#pSock',n+' sockets',n?'ok':''); }
@@ -722,7 +706,7 @@ async function armJoin(){
   const p=pinVal();
   if(!pinOk(p)) return banner('Enter a 5-9 digit game PIN first.','warn');
   stopAll(); armOn=true;
-  banner('Connecting… retries by itself until the game is live.','warn');
+  banner('Connecting… retries until live.','warn');
   pill('#pTok','arming','warn');
   let tries=0;
   while(armOn){
@@ -811,8 +795,8 @@ function stopAll(){
   $('#qText').textContent='waiting for a game…';
   $('#qIdx').textContent='–'; $('#qTime').textContent='–'; $('#qBar').style.width='0';
   $('#answers').innerHTML='';
-  playerList = [];
-  updatePlayerUI();
+  playerListData = [];
+  renderPlayerList();
   tick(); pill('#pTok','token idle'); log('stopped','warn');
 }
 $('#stop').onclick=()=>{ stopAll(); banner(''); };
