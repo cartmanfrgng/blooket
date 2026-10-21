@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Kahoot Hijack – Fixed Oct 2026</title>
+<title>Kahoot Hijack – FINAL</title>
 <style>
 :root { --bg:#F2F2F7; --card:#FFF; --label:#000; --blue:#007AFF; --red:#FF3B30; --green:#34C759; --orange:#FF9500; }
 @media (prefers-color-scheme: dark) { :root { --bg:#000; --card:#1C1C1E; --label:#FFF; } }
@@ -87,30 +87,33 @@ function status(txt, kind) {
   statusPill.className = 'pill ' + (kind || '');
 }
 
-// ========== FIXED DECODER ==========
+// ========== ROBUST DECODER ==========
 function decodeChallenge(challengeStr) {
-  // Extract the message after 'decode.call(this, '
+  // Extract the message from decode.call(this, '...')
   const msgMatch = challengeStr.match(/decode\.call\(this\s*,\s*'([^']*)'/);
   const message = msgMatch ? msgMatch[1] : '';
   if (!message) throw new Error('No message in decode.call');
 
-  // Extract offset expression
-  // e.g., var offset = ((64 + 83) * (78 + 30) + 42);
-  // Remove all whitespace/tabs/newlines
-  const clean = challengeStr.replace(/\s+/g, ' ');
-  const offsetMatch = clean.match(/var\s+offset\s*=\s*([^;]+);/);
+  // Remove ALL whitespace, tabs, newlines from the challenge string
+  const compact = challengeStr.replace(/\s+/g, '');
+  
+  // Extract offset expression: var offset = (...);
+  const offsetMatch = compact.match(/var\s*offset\s*=\s*([^;]+);/);
   let offset;
   if (offsetMatch) {
-    // Evaluate the expression safely
-    const expr = offsetMatch[1].replace(/[\t ]/g, '');
-    // Use Function constructor to evaluate math only (safe because Kahoot provides it)
-    try { offset = Function('return (' + expr + ')')(); } catch(e) { offset = 0; }
+    try {
+      // Evaluate the expression – it's pure math, safe
+      offset = Function('return (' + offsetMatch[1] + ')')();
+    } catch(e) {
+      offset = 0;
+    }
   } else {
-    // Fallback: use offset = 0
+    // Fallback: default spot from original kahoot (common)
     offset = 0;
   }
   log('Decoded offset = ' + offset);
-  // Decode message: for each position, (charCode * position + offset) % 77 + 48
+
+  // Apply formula: ((charCode * position) + offset) % 77 + 48
   let decoded = '';
   for (let i = 0; i < message.length; i++) {
     const c = message.charCodeAt(i);
