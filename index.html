@@ -11,7 +11,7 @@
   --bg:#F2F2F7; --card:#FFFFFF; --sep:rgba(60,60,67,.22); --sep2:rgba(60,60,67,.12);
   --label:#000; --label2:rgba(60,60,67,.62); --label3:rgba(60,60,67,.32);
   --fill:rgba(120,120,128,.10); --fill2:rgba(120,120,128,.18);
-  --nav:rgba(249,249,249,.82); --bar:rgba(249,249,249,.86); --segsel:#fff;
+  --nav:rgba(249,249,249,.82); --bar:rgba(249,249,249,.86);
   --a0:#E21B3C; --a1:#1368CE; --a2:#D89E00; --a3:#26890C;
 }
 @media (prefers-color-scheme:dark){
@@ -19,7 +19,7 @@
     --bg:#000; --card:#1C1C1E; --sep:rgba(84,84,88,.55); --sep2:rgba(84,84,88,.32);
     --label:#fff; --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
     --fill:rgba(120,120,128,.20); --fill2:rgba(120,120,128,.32);
-    --nav:rgba(30,30,32,.82); --bar:rgba(30,30,32,.86); --segsel:#636366;
+    --nav:rgba(30,30,32,.82); --bar:rgba(30,30,32,.86);
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -34,21 +34,17 @@ body{
 .nav h1{margin:0;font-size:27px;font-weight:700;letter-spacing:-.7px}
 .nav .sub{font-size:12px;color:var(--label2);margin-top:1px}
 .dots{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
-.pill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--fill);color:var(--label2);letter-spacing:0;white-space:nowrap}
+.pill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--fill);color:var(--label2);white-space:nowrap}
 .pill.ok{background:rgba(52,199,89,.16);color:#248A3D}
 .pill.bad{background:rgba(255,59,48,.16);color:#D70015}
 .pill.warn{background:rgba(255,149,0,.18);color:#C93400}
-@media (prefers-color-scheme:dark){
-  .pill.ok{color:#30D158}.pill.bad{color:#FF453A}.pill.warn{color:#FF9F0A}
-}
+@media (prefers-color-scheme:dark){.pill.ok{color:#30D158}.pill.bad{color:#FF453A}.pill.warn{color:#FF9F0A}}
 .banner{margin:12px 18px 0;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.4;display:none}
 .banner.show{display:block}
 .banner.warn{background:rgba(255,149,0,.14);color:#C93400}
 .banner.bad{background:rgba(255,59,48,.14);color:#D70015}
 .banner.ok{background:rgba(52,199,89,.14);color:#248A3D}
-@media (prefers-color-scheme:dark){
-  .banner.warn{color:#FF9F0A}.banner.bad{color:#FF453A}.banner.ok{color:#30D158}
-}
+@media (prefers-color-scheme:dark){.banner.warn{color:#FF9F0A}.banner.bad{color:#FF453A}.banner.ok{color:#30D158}}
 .page{padding:16px 18px 0;display:none}
 .page.on{display:block}
 h2.sec{font-size:13px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.4px;margin:0 0 7px 4px}
@@ -58,10 +54,7 @@ h2.sec{font-size:13px;font-weight:600;color:var(--label2);text-transform:upperca
 .row .k{font-size:16px;flex:1;min-width:0}
 .row .v{font-size:16px;color:var(--label2);text-align:right;font-variant-numeric:tabular-nums}
 .row.stack{display:block}
-input,textarea,select{
-  width:100%;background:var(--fill);border:none;color:var(--label);border-radius:10px;
-  padding:11px 13px;font:400 17px/1.2 inherit;outline:none;-webkit-appearance:none;
-}
+input,textarea,select{width:100%;background:var(--fill);border:none;color:var(--label);border-radius:10px;padding:11px 13px;font:400 17px/1.2 inherit;outline:none;-webkit-appearance:none}
 input:focus,textarea:focus{border:1.5px solid var(--blue);padding:9.5px 11.5px}
 textarea{resize:vertical;min-height:74px;font:400 13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
 input[inputmode=numeric]{font-variant-numeric:tabular-nums;letter-spacing:2px;font-weight:600}
@@ -106,7 +99,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 .l{color:var(--label2)}.ok{color:#248A3D}.err{color:#D70015}.warn{color:#C93400}.inf{color:var(--blue)}.mag{color:var(--purple)}
 @media (prefers-color-scheme:dark){.ok{color:#30D158}.err{color:#FF453A}.warn{color:#FF9F0A}.inf{color:#0A84FF}.mag{color:#BF5AF2}}
 .tabbar{position:sticky;bottom:0;z-index:20;display:flex;background:var(--bar);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--sep);padding:5px 0 calc(5px + env(safe-area-inset-bottom))}
-.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--label3);font:500 10px/1 inherit;padding:5px 2px;cursor:pointer;letter-spacing:0}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--label3);font:500 10px/1 inherit;padding:5px 2px;cursor:pointer}
 .tabbar button[aria-selected=true]{color:var(--blue)}
 .tabbar svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .hint{font-size:12px;color:var(--label2);line-height:1.45;margin:-10px 4px 18px}
@@ -136,7 +129,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <section class="page on" id="page-me">
   <h2 class="sec">Game</h2>
   <div class="card">
-    <div class="row stack"><input id="pin" inputmode="numeric" maxlength="9" placeholder="Game PIN" value=""></div>
+    <div class="row stack"><input id="pin" inputmode="numeric" maxlength="9" placeholder="Game PIN"></div>
     <div class="row stack"><input id="nick" maxlength="15" placeholder="Your name" value="venice"></div>
     <div class="row">
       <span class="k">Bot count</span>
@@ -154,9 +147,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
   </div>
   <div class="btns" style="margin-bottom:18px">
     <button class="btn sm" id="wstest">Socket test</button>
-    <button class="btn sm" id="stop">Stop</button>
+    <button class="btn sm" id="diag">Diagnose</button>
+    <button class="btn sm red" id="stop">Stop</button>
   </div>
-  <p class="hint" id="armHint">Type the PIN and tap Join. If the lobby isn't open yet it keeps retrying by itself until it is.</p>
+  <p class="hint" id="armHint">Type the PIN and tap Join. If the lobby isn't open yet it retries by itself until it is.</p>
 
   <h2 class="sec">Live</h2>
   <div class="qcard">
@@ -191,15 +185,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <button class="btn" id="rejoin">Rejoin dead</button>
   </div>
   <h2 class="sec">Steal / boot a name</h2>
-  <div class="card">
-    <div class="row stack"><input id="target" placeholder="their exact name"></div>
-  </div>
+  <div class="card"><div class="row stack"><input id="target" placeholder="their exact name"></div></div>
   <div class="btns" style="margin-bottom:18px">
     <button class="btn sm orange" id="boot1">Boot ×1</button>
     <button class="btn sm orange" id="boot5">Boot ×5</button>
     <button class="btn sm" id="boot20">Boot ×20</button>
   </div>
-  <p class="hint">Logs in under their name. Duplicate logins make Kahoot drop the older holder — ×5 usually empties their slot.</p>
+  <p class="hint">Logs in under their exact name. Duplicate logins make Kahoot drop the older holder — ×5 usually empties their slot.</p>
 </section>
 
 <!-- ======================= TOOLS ======================= -->
@@ -239,14 +231,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
   </div>
   <button class="btn" id="rgo" style="margin-bottom:18px">Publish to all sockets</button>
 
-  <h2 class="sec">Token</h2>
+  <h2 class="sec">Token (auto)</h2>
   <div class="card"><div class="row stack"><input id="tok" placeholder="paste a token to override (optional)"></div></div>
   <div class="tok" id="tokView"></div>
   <div class="btns" style="margin-top:9px;margin-bottom:18px">
-    <button class="btn sm" id="diag">Diagnose</button>
     <button class="btn sm" id="tokClear">Clear token</button>
+    <button class="btn sm" id="epClear">Forget endpoint</button>
   </div>
-  <p class="hint">Token is fetched and decoded automatically. This box is only for when school wifi blocks every route.</p>
+  <p class="hint">Fetched and decoded automatically. Only touch this if every route is blocked.</p>
 </section>
 
 <!-- ======================= LOG ======================= -->
@@ -267,7 +259,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 </div>
 
 <script>
-/* ===================== tiny utils ===================== */
+/* =====================================================================
+   utils
+   ===================================================================== */
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -290,7 +284,6 @@ function banner(msg, kind){
   b.textContent = msg;
 }
 
-/* ===================== log ===================== */
 const logEl = $('#log');
 const T0 = Date.now();
 function log(msg, cls){
@@ -299,11 +292,10 @@ function log(msg, cls){
   d.innerHTML = '<span class="t">' + ((Date.now() - T0) / 1000).toFixed(1) + 's</span>' +
     String(msg).replace(/&/g, '&amp;').replace(/</g, '&lt;');
   logEl.appendChild(d);
-  while (logEl.childNodes.length > 500) logEl.removeChild(logEl.firstChild);
+  while (logEl.childNodes.length > 600) logEl.removeChild(logEl.firstChild);
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-/* ===================== beeps ===================== */
 let AC = null;
 function beep(freq, dur, type){
   if (!$('#beeps').checked) return;
@@ -319,22 +311,30 @@ function beep(freq, dur, type){
   } catch(e){}
 }
 
-/* ===================== socket layer ===================== */
-function openSocket(url, timeout){
+/* =====================================================================
+   socket plumbing
+   ===================================================================== */
+function rawSocket(url, sub, timeout){
   return new Promise(res => {
-    let ws, done = false;
-    const fin = (ok, why) => { if (done) return; done = true; clearTimeout(tm); try { ws && ws.close(); } catch(e){} res({ ok, why, url }); };
-    const tm = setTimeout(() => fin(false, 'no open in ' + timeout + 'ms'), timeout);
-    if (typeof WebSocket === 'undefined') return fin(false, 'WebSocket undefined in this frame');
-    try { ws = new WebSocket(url); }
+    let ws, done = false, opened = false;
+    const fin = (ok, why) => { if (done) return; done = true; clearTimeout(tm); try { ws && ws.close(); } catch(e){} res({ opened, ok, why, url }); };
+    const tm = setTimeout(() => fin(false, opened ? 'open, no handshake reply' : 'no upgrade'), timeout);
+    if (typeof WebSocket === 'undefined') return fin(false, 'WebSocket undefined here');
+    try { ws = sub ? new WebSocket(url, sub) : new WebSocket(url); }
     catch(e){ return fin(false, 'ctor ' + (e && e.name || '?') + ': ' + (e && e.message || e)); }
-    ws.onopen = () => fin(true, 'open');
+    ws.onopen = () => { opened = true; try { ws.send(HS(1)); } catch(e){ fin(false, 'send failed'); } };
     ws.onerror = () => {};
-    ws.onclose = e => fin(false, 'closed ' + e.code + (e.reason ? ' "' + e.reason + '"' : ''));
+    ws.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch(e){ return fin(false, 'non-json frame'); }
+      (Array.isArray(m) ? m : [m]).forEach(x => {
+        if (x && x.channel === '/meta/handshake')
+          fin(!!x.successful, x.successful ? 'OK clientId=' + x.clientId : 'REJECTED: ' + (x.error || 'no error field'));
+      });
+    };
+    ws.onclose = e => fin(false, (opened ? 'closed after upgrade ' : 'closed before upgrade ') + e.code + (e.reason ? ' "' + e.reason + '"' : ''));
   });
 }
 
-const ECHO = ['wss://ws.postman-echo.com/raw', 'wss://ws.ifelse.io'];
 async function wsTest(){
   log('frame origin=' + (location.origin || 'null') + ' proto=' + location.protocol +
       ' WebSocket=' + (typeof WebSocket) + ' top=' + (window.top === window ? 'self' : 'iframe'), 'inf');
@@ -343,30 +343,33 @@ async function wsTest(){
     banner('This embed strips WebSocket. Host the file and embed by URL instead.', 'bad');
     return;
   }
-  for (const u of ECHO){
-    const r = await openSocket(u, 6000);
-    log('echo ' + u.replace(/^wss:\/\//, '') + ' → ' + (r.ok ? 'OPEN OK' : r.why), r.ok ? 'ok' : 'err');
-    if (r.ok){ pill('#pFrame', 'sockets ok', 'ok'); banner(''); return log('Sockets work here. Now type a PIN and hit Join.', 'ok'); }
+  for (const u of ['wss://ws.postman-echo.com/raw', 'wss://ws.ifelse.io']){
+    const r = await rawSocket(u, null, 6000);
+    log('echo ' + u.replace(/^wss:\/\//, '') + ' → ' + (r.opened ? 'OPEN OK' : r.why), r.opened ? 'ok' : 'err');
+    if (r.opened){ pill('#pFrame', 'sockets ok', 'ok'); banner(''); return log('Sockets work here. Type a PIN and hit Join.', 'ok'); }
   }
   pill('#pFrame', 'sockets blocked', 'bad');
-  banner('Sockets are blocked inside this embed. Host the file on GitHub Pages and use Sites → Embed → By URL.', 'bad');
-  log('Even an echo server fails → the iframe is blocking sockets.', 'err');
+  banner('Sockets blocked in this frame. Host the file and embed by URL.', 'bad');
 }
 
-/* ===================== token ===================== */
+/* =====================================================================
+   token fetch
+   ===================================================================== */
 const R = 'https://kahoot.it/reserve/session/';
+
 const TRANSPORTS = [
-  { n:'cors.lol',   t:12000, b:u => 'https://api.cors.lol/?url=' + enc(u) },
-  { n:'allorigins', t:14000, b:u => 'https://api.allorigins.win/raw?url=' + enc(u) },
-  { n:'jina',       t:14000, b:u => 'https://r.jina.ai/' + u },
-  { n:'direct',     t:8000,  b:u => u },
-  { n:'codetabs',   t:16000, b:u => 'https://api.codetabs.com/v1/proxy?quest=' + enc(u) },
-  { n:'isogit',     t:12000, b:u => 'https://cors.isomorphic-git.org/' + u },
-  { n:'allorigins-j', t:16000, jsonp:true, b:u => 'https://api.allorigins.win/get?url=' + enc(u), pick:d => d && d.contents },
-  { n:'thingproxy', t:14000, b:u => 'https://thingproxy.freeboard.io/fetch/' + u },
-  { n:'cors.eu.org',t:12000, b:u => 'https://cors.eu.org/' + u },
-  { n:'play-direct',t:8000,  b:u => u.replace('kahoot.it', 'play.kahoot.it') },
+  { n:'cors.lol',     t:11000, b:u => 'https://api.cors.lol/?url=' + enc(u) },
+  { n:'cors.eu.org',  t:11000, b:u => 'https://cors.eu.org/' + u },
+  { n:'allorigins',   t:12000, b:u => 'https://api.allorigins.win/raw?url=' + enc(u) },
+  { n:'jina',         t:12000, b:u => 'https://r.jina.ai/' + u },
+  { n:'direct',       t:7000,  b:u => u },
+  { n:'codetabs',     t:14000, b:u => 'https://api.codetabs.com/v1/proxy?quest=' + enc(u) },
+  { n:'isogit',       t:11000, b:u => 'https://cors.isomorphic-git.org/' + u },
+  { n:'allorigins-j', t:14000, jsonp:true, b:u => 'https://api.allorigins.win/get?url=' + enc(u), pick:d => d && d.contents },
+  { n:'thingproxy',   t:13000, b:u => 'https://thingproxy.freeboard.io/fetch/' + u },
+  { n:'play-direct',  t:7000,  b:u => u.replace('kahoot.it', 'play.kahoot.it') }
 ];
+
 function jsonp(url, timeout){
   return new Promise((res, rej) => {
     const cb = '__k' + rnd(8), s = document.createElement('script');
@@ -379,17 +382,18 @@ function jsonp(url, timeout){
     document.head.appendChild(s);
   });
 }
-async function runTransport(tr, url, pin){
+
+async function runTransport(tr, url){
   const ctl = new AbortController();
   const to = setTimeout(() => ctl.abort(), tr.t);
   try {
     if (tr.jsonp){
-      const d = await jsonp(tr.b(url, pin), tr.t);
+      const d = await jsonp(tr.b(url), tr.t);
       const txt = tr.pick ? tr.pick(d) : (typeof d === 'string' ? d : JSON.stringify(d));
       if (!txt) throw new Error('empty');
       return { text: String(txt), header: null };
     }
-    const r = await fetch(tr.b(url, pin), { signal: ctl.signal, cache: 'no-store' });
+    const r = await fetch(tr.b(url), { signal: ctl.signal, cache: 'no-store' });
     if (!r.ok) throw new Error('http ' + r.status);
     const text = await r.text();
     let header = null; try { header = r.headers.get('x-kahoot-session-token'); } catch(e){}
@@ -397,6 +401,13 @@ async function runTransport(tr, url, pin){
     return { text, header };
   } finally { clearTimeout(to); }
 }
+
+/* =====================================================================
+   challenge decode — kahoot's own decode() gets executed, with a complete
+   angular/lodash shim. The shim previously only had isObject/isNumber, so
+   any challenge using isArray / isString / isDate threw and killed the
+   whole candidate build (which then showed up as a fake "fetch fail").
+   ===================================================================== */
 function extractChallenge(t){
   if (!t) return null;
   let ch = null;
@@ -405,150 +416,242 @@ function extractChallenge(t){
   if (!ch){ const m = t.match(/decode\.call\(this[\s\S]*/); if (m) ch = m[0]; }
   return ch;
 }
-function buildDecoder(ch){
+
+function shims(){
+  const lodash = new Proxy({
+    replace: (s, re, fn) => String(s).replace(re, fn)
+  }, { get(t, k){ if (k in t) return t[k]; if (typeof k === 'symbol') return undefined; return (...a) => a[0]; } });
+
+  const angular = {
+    isObject:  v => v !== null && typeof v === 'object',
+    isArray:   v => Array.isArray(v),
+    isString:  v => typeof v === 'string',
+    isNumber:  v => typeof v === 'number',
+    isDate:    v => Object.prototype.toString.call(v) === '[object Date]',
+    isFunction:v => typeof v === 'function',
+    isBoolean: v => typeof v === 'boolean',
+    isDefined: v => v !== undefined,
+    isUndefined: v => v === undefined,
+    isNull:    v => v === null,
+    isElement: () => false,
+    isFinite:  v => Number.isFinite(v),
+    isPlainObject: v => !!v && Object.getPrototypeOf(v) === Object.prototype
+  };
+  return { lodash, angular };
+}
+
+function buildDecoders(ch){
+  const out = [];
+
   try {
     const s = ch.indexOf('function decode');
     if (s >= 0){
       let body = ch.slice(s).trim();
       const e = body.lastIndexOf('}');
       if (e >= 0) body = body.slice(0, e + 1);
-      const _ = { replace: (a, re, fn) => String(a).replace(re, fn) };
-      const angular = { isObject: () => false, isNumber: () => false };
-      const f = new Function('_', 'angular', body + '\nreturn decode;')(_, angular);
-      if (typeof f === 'function') return str => f.call({ angular, _ }, String(str));
+      const sh = shims();
+      const f = new Function('_', 'angular', body + '\nreturn decode;')(sh.lodash, sh.angular);
+      if (typeof f === 'function'){
+        out.push({ tag:'real', fn: str => f.call({ angular: sh.angular, _: sh.lodash }, String(str)) });
+        log('decoder: executing kahoot\'s own decode()', 'mag');
+      }
     }
-  } catch(e){ log('decoder eval failed: ' + e.message, 'warn'); }
-  let offset = 0;
-  const om = ch.match(/var\s+offset\s*=\s*([^;]+);/);
-  if (om){ try { offset = Function('return (' + om[1] + ')')(); } catch(e){} }
-  const mm = ch.match(/%\s*(\d+)/);                 const mod  = mm ? +mm[1] : 77;
-  const pm = ch.match(/%\s*\d+\s*\)\s*\+\s*(\d+)/); const plus = pm ? +pm[1] : 48;
-  return str => { let o = ''; for (let i = 0; i < str.length; i++) o += String.fromCharCode((((str.charCodeAt(i) * i) + offset) % mod) + plus); return o; };
-}
-function buildCandidates(text, header){
-  const out = [], seen = new Set();
-  const push = (t, tag) => { if (t && t.length > 4 && !seen.has(t)){ seen.add(t); out.push({ t, tag }); } };
-  const ch = extractChallenge(text);
-  if (ch){
-    const em = ch.match(/decode\.call\(this\s*,\s*'([^']*)'\)/);
-    const emb = em ? em[1] : null;
-    const dec = buildDecoder(ch);
-    if (emb && dec) push(dec(emb), 'decoded');
-    if (header && dec) push(dec(header), 'decoded-hdr');
-    if (emb) push(emb, 'raw');
-  }
-  if (header) push(header, 'raw-hdr');
-  for (const c of out.slice()){ try { const d = atob(c.t); if (d) push(d, c.tag + '+b64'); } catch(e){} }
+  } catch(e){ log('real decoder eval failed: ' + e.message, 'warn'); }
+
+  try {
+    let offset = 0;
+    const om = ch.match(/var\s+offset\s*=\s*([^;]+);/);
+    if (om){ try { offset = Function('return (' + om[1] + ')')(); } catch(e){} }
+    if (!isFinite(offset)) offset = 0;
+    const mm = ch.match(/%\s*(\d+)\s*\)\s*\+\s*(\d+)/);
+    const mod = mm ? +mm[1] : 77, plus = mm ? +mm[2] : 48;
+    for (const base of [0, 1]){
+      out.push({
+        tag: 'formula' + (base ? '/1idx' : '/0idx'),
+        fn: str => { let o = ''; for (let i = 0; i < str.length; i++) o += String.fromCharCode((((str.charCodeAt(i) * (i + base)) + offset) % mod) + plus); return o; }
+      });
+    }
+    log('decoder: fallback formula offset=' + offset + ' mod=' + mod + ' plus=' + plus, 'mag');
+  } catch(e){}
+
   return out;
 }
 
-/* ===================== probe ===================== */
+function buildCandidates(text, header){
+  const out = [], seen = new Set();
+  const push = (t, tag) => { if (t && typeof t === 'string' && t.length >= 8 && !seen.has(t)){ seen.add(t); out.push({ t, tag }); } };
+  try {
+    const ch = extractChallenge(text);
+    if (ch){
+      const em = ch.match(/decode\.call\(this\s*,\s*'([^']*)'\)/);
+      const emb = em ? em[1] : null;
+      if (emb) log('challenge embedded len=' + emb.length, 'mag');
+      for (const d of buildDecoders(ch)){
+        if (emb){ try { push(d.fn(emb), d.tag); } catch(e){ log('decode ' + d.tag + ' threw: ' + e.message, 'warn'); } }
+        if (header){ try { push(d.fn(header), d.tag + '/hdr'); } catch(e){} }
+      }
+      if (emb) push(emb, 'embedded-raw');
+    }
+  } catch(e){ log('candidate build threw: ' + e.message, 'warn'); }
+
+  if (header) push(header, 'header-raw');
+
+  for (const c of out.slice()){
+    try { const d = atob(c.t); if (d && /^[\x20-\x7e]+$/.test(d)) push(d, c.tag + '+b64'); } catch(e){}
+  }
+  return out;
+}
+
+/* =====================================================================
+   url shapes + probe
+   ===================================================================== */
 const MINRE = /[\\?#%\[\]{}|^`<>"]/g;
 const minEnc = s => s.replace(MINRE, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
-const VARIANTS = [
-  { host:'kahoot.it',      mode:'enc', scheme:'wss', tag:'wss/enc' },
-  { host:'kahoot.it',      mode:'raw', scheme:'wss', tag:'wss/raw' },
-  { host:'kahoot.it',      mode:'min', scheme:'wss', tag:'wss/min' },
-  { host:'play.kahoot.it', mode:'enc', scheme:'wss', tag:'play/enc' },
-  { host:'kahoot.it',      mode:'enc', scheme:'ws',  tag:'ws/enc' }
-];
 const inUrl = (m, t) => m === 'enc' ? enc(t) : m === 'min' ? minEnc(t) : t;
-let EP = { host:'kahoot.it', mode:'enc', scheme:'wss' };
-function wsUrl(pin, token){ return EP.scheme + '://' + EP.host + '/cometd/' + pin + '/' + inUrl(EP.mode, token); }
+
+const SHAPES = [
+  { scheme:'wss', host:'kahoot.it',      mode:'enc', tag:'wss/enc' },
+  { scheme:'wss', host:'kahoot.it',      mode:'min', tag:'wss/min' },
+  { scheme:'wss', host:'kahoot.it',      mode:'raw', tag:'wss/raw' },
+  { scheme:'wss', host:'kahoot.it',      mode:'enc', sub:'cometd', tag:'wss/enc+sub' },
+  { scheme:'wss', host:'kahoot.it',      mode:'enc', trail:true, tag:'wss/enc/trail' },
+  { scheme:'wss', host:'play.kahoot.it', mode:'enc', tag:'play/enc' }
+];
+
+let EP = { scheme:'wss', host:'kahoot.it', mode:'enc', sub:null, trail:false };
+function wsUrl(pin, token){
+  return EP.scheme + '://' + EP.host + '/cometd/' + pin + '/' + inUrl(EP.mode, token) + (EP.trail ? '/' : '');
+}
 const HS = id => JSON.stringify([{ channel:'/meta/handshake', version:'1.0', minimumVersion:'1.0',
   supportedConnectionTypes:['websocket','long-polling'], advice:{ timeout:60000, interval:0 },
   ext:{ ack:true, timesync:true }, id:String(id) }]);
 
-function probe(pin, token, v, timeout){
-  const url = v.scheme + '://' + v.host + '/cometd/' + pin + '/' + inUrl(v.mode, token);
+function probe(pin, token, sh, timeout){
+  const url = sh.scheme + '://' + sh.host + '/cometd/' + pin + '/' + inUrl(sh.mode, token) + (sh.trail ? '/' : '');
   return new Promise(res => {
-    let ws, done = false;
-    const fin = (ok, why) => { if (done) return; done = true; clearTimeout(tm); try { ws && ws.close(); } catch(e){} res({ ok, why, url }); };
-    const tm = setTimeout(() => fin(false, 'no handshake in ' + timeout + 'ms'), timeout);
-    try { ws = new WebSocket(url); }
+    let ws, done = false, opened = false;
+    const fin = (ok, why) => { if (done) return; done = true; clearTimeout(tm); try { ws && ws.close(); } catch(e){} res({ opened, ok, why, url }); };
+    const tm = setTimeout(() => fin(false, opened ? 'open, no handshake reply' : 'no upgrade'), timeout);
+    try { ws = sh.sub ? new WebSocket(url, sh.sub) : new WebSocket(url); }
     catch(e){ return fin(false, 'ctor ' + (e && e.name || '?') + ': ' + (e && e.message || e)); }
-    ws.onopen = () => { try { ws.send(HS(1)); } catch(e){ fin(false, 'send failed'); } };
+    ws.onopen = () => { opened = true; try { ws.send(HS(1)); } catch(e){ fin(false, 'send failed'); } };
     ws.onerror = () => {};
     ws.onmessage = ev => {
       let m; try { m = JSON.parse(ev.data); } catch(e){ return fin(false, 'non-json frame'); }
       (Array.isArray(m) ? m : [m]).forEach(x => {
         if (x && x.channel === '/meta/handshake')
-          fin(!!x.successful, x.successful ? 'OK' : 'REJECTED: ' + (x.error || 'no error field'));
+          fin(!!x.successful, x.successful ? 'OK clientId=' + x.clientId : 'REJECTED: ' + (x.error || 'no error field'));
       });
     };
-    ws.onclose = e => fin(false, 'closed ' + e.code + (e.reason ? ' "' + e.reason + '"' : ''));
+    ws.onclose = e => fin(false, (opened ? 'closed after upgrade ' : 'closed before upgrade ') + e.code + (e.reason ? ' "' + e.reason + '"' : ''));
   });
 }
 
-/* ===================== resolver ===================== */
+/* ground truth when the upgrade itself dies: read the real http status */
+async function httpStatus(pin, token, mode){
+  const target = 'https://kahoot.it/cometd/' + pin + '/' + inUrl(mode, token);
+  for (const r of [
+    { n:'cors.lol', b:u => 'https://api.cors.lol/?url=' + enc(u) },
+    { n:'allorigins', b:u => 'https://api.allorigins.win/raw?url=' + enc(u) }
+  ]){
+    try {
+      const resp = await fetch(r.b(target), { cache:'no-store' });
+      const txt = (await resp.text()).slice(0, 160).replace(/\s+/g, ' ');
+      log('http ' + r.n + ' → ' + resp.status + '  ' + txt, resp.status === 200 ? 'ok' : 'warn');
+      return;
+    } catch(e){ log('http ' + r.n + ' failed: ' + e.message, 'warn'); }
+  }
+}
+
+/* =====================================================================
+   resolver
+   ===================================================================== */
 let RESOLVING = false, LOCKED = null;
+
 async function resolveToken(pin, manual){
   if (RESOLVING) throw new Error('resolver busy');
   RESOLVING = true;
   try {
     const cands = [];
-    let settled = false, winner = null, ep = null;
     const add = list => { for (const c of list) if (!cands.some(x => x.t === c.t)) cands.push(c); };
 
-    const drain = (async () => {
-      let i = 0;
-      while (true){
-        if (i >= cands.length){ if (settled) break; await sleep(120); continue; }
-        const c = cands[i++];
-        for (const v of VARIANTS){
-          const r = await probe(pin, c.t, v, 7000);
-          log('probe ' + c.tag + ' ' + v.tag + ' → ' + (r.ok ? 'OK' : r.why), r.ok ? 'ok' : 'l');
-          if (r.ok){ winner = c; ep = v; return; }
-        }
-      }
-    })();
-
     if (manual){
-      log('token: manual (' + manual.length + ' chars)', 'inf');
+      log('token: manual override (' + manual.length + ' chars)', 'inf');
       add([{ t: manual, tag: 'manual' }]);
-      settled = true;
     } else {
-      const url = R + pin + '/?' + Date.now();
+      const url = R + pin + '/?_=' + Date.now();
       pill('#pTok', 'token: fetching', 'warn');
-      log('fetching token for ' + pin + ' via ' + TRANSPORTS.length + ' routes…', 'inf');
-      const jobs = TRANSPORTS.map((tr, i) => sleep(i * 55).then(async () => {
+      log('fetching session for ' + pin + ' via ' + TRANSPORTS.length + ' routes…', 'inf');
+      await Promise.all(TRANSPORTS.map((tr, i) => sleep(i * 50).then(async () => {
         try {
-          const res = await runTransport(tr, url, pin);
-          log('fetch ok ' + tr.n + ' (' + String(res.text || '').length + 'b' + (res.header ? '+hdr' : '') + ')', 'ok');
-          add(buildCandidates(res.text, res.header));
-        } catch(e){ log('fetch fail ' + tr.n + ': ' + (e && e.name === 'AbortError' ? 'timeout' : e.message), 'warn'); }
-      }));
-      await Promise.all(jobs);
-      settled = true;
+          const res = await runTransport(tr, url);
+          const list = buildCandidates(res.text, res.header);
+          log('source ' + tr.n + ' → ' + list.length + ' candidate(s)' + (res.header ? ' +hdr' : ''), list.length ? 'ok' : 'warn');
+          add(list);
+        } catch(e){
+          log('fetch fail ' + tr.n + ': ' + (e && e.name === 'AbortError' ? 'timeout' : e.message), 'warn');
+        }
+      })));
     }
 
-    await drain;
+    if (!cands.length) throw new Error('no token candidates at all');
+    log('candidates: ' + cands.map(c => c.tag).join(', '), 'mag');
 
-    if (winner){
-      EP = { host: ep.host, mode: ep.mode, scheme: ep.scheme };
-      LOCKED = winner.t;
-      S.set('ep', ep.scheme + '|' + ep.host + '|' + ep.mode);
-      pill('#pTok', 'token locked', 'ok');
-      pill('#pEp', ep.scheme + '://' + ep.host, 'ok');
-      $('#tokView').textContent = winner.t.slice(0, 40) + '…  [' + winner.t.length + ']';
-      log('TOKEN LOCKED on ' + ep.scheme + '://' + ep.host + ' [' + ep.mode + ']', 'ok');
-      banner('');
-      return winner.t;
+    /* phase A — find a shape that at least upgrades. If the edge validates the
+       token before upgrading, a bad token makes a good shape look dead, so we
+       try the first few candidates against every shape before giving up.       */
+    let shape = null;
+    outer:
+    for (const c of cands.slice(0, 3)){
+      for (const sh of SHAPES){
+        const r = await probe(pin, c.t, sh, 4500);
+        log('shape ' + sh.tag + ' («' + c.tag + '») → ' + (r.opened ? 'UPGRADE OK' : r.why), r.opened ? 'ok' : 'l');
+        if (r.opened){ shape = sh; break outer; }
+      }
     }
 
-    for (let i = 0; i < 4; i++){
-      const v = VARIANTS[i % VARIANTS.length];
-      const r = await probe(pin, rnd(12), v, 5000);
-      log('random ' + v.tag + ' → ' + (r.ok ? 'OK' : r.why), r.ok ? 'ok' : 'l');
-      if (r.ok){ LOCKED = null; EP = { host: v.host, mode: v.mode, scheme: v.scheme }; pill('#pTok', 'random ok', 'warn'); return rnd(12); }
+    if (!shape){
+      log('NO endpoint accepted the upgrade — checking http status of the same url…', 'warn');
+      await httpStatus(pin, cands[0].t, 'enc');
+      throw new Error('websocket upgrade rejected on every endpoint');
     }
-    throw new Error('no token route worked');
+
+    EP = { scheme: shape.scheme, host: shape.host, mode: shape.mode, sub: shape.sub || null, trail: !!shape.trail };
+    pill('#pEp', shape.scheme + '://' + shape.host + ' ' + shape.mode, 'ok');
+    log('transport locked: ' + shape.tag, 'ok');
+
+    /* phase B — which candidate actually handshakes */
+    for (const c of cands){
+      const r = await probe(pin, c.t, shape, 6000);
+      log('probe «' + c.tag + '» → ' + (r.ok ? 'HANDSHAKE OK' : r.why), r.ok ? 'ok' : 'l');
+      if (r.ok){
+        LOCKED = c.t;
+        S.set('ep', [shape.scheme, shape.host, shape.mode, shape.sub || '', shape.trail ? '1' : ''].join('|'));
+        pill('#pTok', 'token locked', 'ok');
+        $('#tokView').textContent = c.t.slice(0, 44) + '…  [' + c.t.length + ']';
+        log('TOKEN LOCKED «' + c.tag + '» on ' + shape.tag, 'ok');
+        banner('');
+        return c.t;
+      }
+    }
+
+    /* phase C — last resort, random token */
+    for (let i = 0; i < 3; i++){
+      const t = rnd(12);
+      const r = await probe(pin, t, shape, 5000);
+      log('random token → ' + (r.ok ? 'OK' : r.why), r.ok ? 'ok' : 'l');
+      if (r.ok){ LOCKED = t; pill('#pTok', 'token random', 'warn'); return t; }
+    }
+
+    throw new Error('endpoint is fine, but no token handshook on ' + shape.tag);
   } finally { RESOLVING = false; }
 }
 
-/* ===================== player ===================== */
-let players = [], solo = null, autoSolo = true, armOn = false, qSeen = false;
-const SHAPES = ['▲', '◆', '●', '■'];
+/* =====================================================================
+   player
+   ===================================================================== */
+let players = [], solo = null, autoSolo = true, armOn = false;
+const SHAPES_ICON = ['▲', '◆', '●', '■'];
 
 class Player {
   constructor(pin, name, token, on){
@@ -562,7 +665,7 @@ class Player {
     return new Promise((res, rej) => {
       const url = wsUrl(this.pin, this.token);
       let ws;
-      try { ws = new WebSocket(url); }
+      try { ws = EP.sub ? new WebSocket(url, EP.sub) : new WebSocket(url); }
       catch(e){ return rej(new Error('ctor ' + (e && e.message || e) + ' [' + url + ']')); }
       this.ws = ws;
       const tm = setTimeout(() => rej(new Error('ws timeout')), 15000);
@@ -641,7 +744,9 @@ class Player {
   close(){ this.dead = true; try { this.ws.close(); } catch(e){} }
 }
 
-/* ===================== live view ===================== */
+/* =====================================================================
+   live view
+   ===================================================================== */
 function renderQuestion(c){
   if (!c) return;
   $('#qIdx').textContent = (c.questionIndex ?? 0) + 1;
@@ -650,13 +755,13 @@ function renderQuestion(c){
   (c.answers || []).forEach((a, i) => {
     const b = document.createElement('div');
     b.className = 'ans g' + i;
-    b.innerHTML = '<span class="sh">' + SHAPES[i] + '</span><span>' + (i + 1) + '. ' +
+    b.innerHTML = '<span class="sh">' + SHAPES_ICON[i] + '</span><span>' + (i + 1) + '. ' +
       String(a.answer || '').replace(/</g, '&lt;') + '</span>';
     b.onclick = () => { players.forEach(p => { p.answered = false; p.answer(i); }); b.classList.add('hit'); };
     box.appendChild(b);
   });
   const k = (c.answers || []).findIndex(a => a.correct);
-  if (k >= 0 && !$('#auto').checked) box.children[k] && box.children[k].classList.add('hit');
+  if (k >= 0 && !$('#auto').checked && box.children[k]) box.children[k].classList.add('hit');
   if ($('#tts').checked && c.question){ try { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(c.question)); } catch(e){} }
   beep(880, 0.12);
   const secs = c.time || 20, started = Date.now();
@@ -677,7 +782,9 @@ function revealCorrect(choices){
   beep(1180, 0.1);
 }
 
-/* ===================== actions ===================== */
+/* =====================================================================
+   actions
+   ===================================================================== */
 const pinOk = p => /^\d{5,9}$/.test(p);
 const pinVal = () => $('#pin').value.trim();
 function tickPills(){
@@ -705,14 +812,17 @@ $$('[data-step]').forEach(b => b.onclick = () => {
 });
 
 const savedEp = S.get('ep', '');
-if (savedEp){ const [sc, h, m] = savedEp.split('|'); if (sc && h && m){ EP = { scheme: sc, host: h, mode: m }; pill('#pEp', sc + '://' + h, 'ok'); } }
+if (savedEp){
+  const [sc, h, m, sub, tr] = savedEp.split('|');
+  if (sc && h && m){ EP = { scheme: sc, host: h, mode: m, sub: sub || null, trail: tr === '1' }; pill('#pEp', sc + '://' + h + ' ' + m, 'ok'); }
+}
 
 $('#acc').addEventListener('input', () => $('#accv').textContent = $('#acc').value + '%');
 $('#delay').addEventListener('input', () => $('#dlv').textContent = $('#delay').value + ' ms');
 
 function soloOpts(){
   return {
-    join: (pl, d) => {
+    join: (pl) => {
       log('JOINED as "' + pl.name + '"', 'ok');
       pill('#pTok', 'in game', 'ok');
       banner('You are in as ' + pl.name + '.', 'ok');
@@ -739,7 +849,7 @@ async function armJoin(){
   const p = pinVal();
   if (!pinOk(p)) return banner('Enter a 5-9 digit game PIN first.', 'warn');
   stopAll(); armOn = true;
-  banner('Connecting… if the lobby is not open yet it will keep retrying.', 'warn');
+  banner('Connecting… if the lobby is not open yet it keeps retrying.', 'warn');
   pill('#pTok', 'arming', 'warn');
   let tries = 0;
   while (armOn){
@@ -749,12 +859,12 @@ async function armJoin(){
       solo = new Player(p, $('#nick').value.trim() || 'venice', tk, soloOpts());
       players.push(solo);
       await solo.connect();
-      solo.on.close = () => { if (!solo.dead && armOn) { log('socket dropped — reconnecting', 'warn'); armJoin(); } };
+      solo.on.close = () => { if (!solo.dead && armOn){ log('socket dropped — reconnecting', 'warn'); armJoin(); } };
       return;
     } catch(e){
       tries++;
       log('attempt ' + tries + ': ' + e.message, 'warn');
-      banner('Not in yet — ' + (tries < 3 ? 'game may not be live. Retrying…' : 'retrying every 3s (school wifi? try Socket test)'), 'warn');
+      banner('Not in yet — ' + (tries < 3 ? 'game may not be live. Retrying…' : 'still retrying every 3s. Run Diagnose if it sticks.'), 'warn');
       await sleep(3000);
     }
   }
@@ -878,10 +988,12 @@ $('#wstest').onclick = wsTest;
 $('#diag').onclick = async () => {
   const p = pinVal();
   if (!pinOk(p)) return banner('Enter a PIN first.', 'warn');
-  try { const tk = await resolveToken(p, $('#tok').value.trim() || null); banner('Link works. ' + tk.length + ' char token accepted. Hit Join.', 'ok'); }
-  catch(e){ banner('Diagnose failed: ' + e.message, 'bad'); log('DIAGNOSE: ' + e.message, 'err'); }
+  banner('Diagnosing…', 'warn');
+  try { const tk = await resolveToken(p, $('#tok').value.trim() || null); banner('Link works. ' + tk.length + ' char token accepted on ' + EP.host + '.', 'ok'); }
+  catch(e){ banner('Diagnose: ' + e.message, 'bad'); log('DIAGNOSE: ' + e.message, 'err'); }
 };
 $('#tokClear').onclick = () => { $('#tok').value = ''; $('#tokView').textContent = ''; log('token box cleared', 'warn'); };
+$('#epClear').onclick = () => { S.del('ep'); EP = { scheme:'wss', host:'kahoot.it', mode:'enc', sub:null, trail:false }; pill('#pEp', 'endpoint reset', 'warn'); log('endpoint forgotten — will rediscover', 'warn'); };
 
 $('#copy').onclick = () => {
   const pr = (navigator.clipboard && navigator.clipboard.writeText(logEl.innerText)) || Promise.reject();
@@ -894,7 +1006,6 @@ $$('.tabbar button').forEach(b => b.onclick = () => {
   $$('.page').forEach(p => p.classList.toggle('on', p.id === 'page-' + b.dataset.tab));
 });
 
-/* ===================== boot ===================== */
 log('ready. type a PIN, tap Join.', 'ok');
 pill('#pTok', 'token idle');
 wsTest();
