@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
-  <title>Kahoot Hijack v3 – Worker Relay</title>
+  <title>Kahoot Hijack v4 – Kick & Join</title>
   <style>
     :root{
       --blue:#007AFF; --green:#34C759; --red:#FF3B30; --orange:#FF9500; --purple:#AF52DE;
@@ -101,14 +101,18 @@
     #ytw iframe{width:100%;height:70px;border:0;border-radius:10px;display:block;margin-top:8px}
     .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--label3);margin-right:5px;vertical-align:1px}
     .dot.ok{background:var(--green)}.dot.bad{background:var(--red)}.dot.warn{background:var(--orange)}
+    .player-list { font-size:14px; }
+    .player-item { display:flex; align-items:center; padding:8px 14px; border-bottom:1px solid var(--sep2); }
+    .player-item .name { flex:1; }
+    .player-item .kick-btn { background:var(--red); color:#fff; border:none; padding:4px 12px; border-radius:8px; font-weight:600; font-size:13px; }
   </style>
 </head>
 <body>
 <div class="app">
 
 <header class="nav">
-  <h1>Kahoot Hijack v3</h1>
-  <div class="sub">private relay – no dead proxies</div>
+  <h1>Kahoot Hijack v4</h1>
+  <div class="sub">private relay + live kick</div>
   <div class="dots">
     <span class="pill" id="pFrame"><span class="dot"></span>frame</span>
     <span class="pill" id="pSess"><span class="dot"></span>session</span>
@@ -140,6 +144,11 @@
     <button class="btn sm red" id="stop">Stop</button>
   </div>
   <p class="hint">Type the PIN and tap Join. If the lobby isn't open yet it keeps retrying by itself.</p>
+
+  <h2 class="sec">Players in game</h2>
+  <div class="card player-list" id="playerList">
+    <div class="player-item" style="color:var(--label2)">No players yet</div>
+  </div>
 
   <h2 class="sec">Live</h2>
   <div class="qcard">
@@ -289,7 +298,7 @@ function beep(f,dur,type){
   }catch(e){}
 }
 
-/* ===================== base64 / xor / decode ===================== */
+/* ===================== base64 / xor / decode (unchanged) ===================== */
 function b64dec(s){
   if(!s) return null;
   let t=String(s).trim().replace(/\s+/g,'').replace(/-/g,'+').replace(/_/g,'/');
@@ -350,7 +359,7 @@ function decoders(ch){
   return out;
 }
 
-/* ===================== session fetch (via YOUR Worker) ===================== */
+/* ===================== session fetch (worker) ===================== */
 async function oneFetch(pin) {
   const url = `${WORKER}?url=${enc('https://kahoot.it/reserve/session/' + pin + '?_=' + Date.now())}`;
   const r = await fetch(url, { cache: 'no-store' });
@@ -359,9 +368,7 @@ async function oneFetch(pin) {
   const header = r.headers.get('x-kahoot-session-token');
   return { text, header };
 }
-
 async function grabSession(pin) {
-  // try up to 2 times, 2 second delay
   for (let i = 0; i < 2; i++) {
     try {
       const res = await oneFetch(pin);
@@ -398,7 +405,6 @@ function buildTokens(session) {
     } catch (e) {}
   }
 
-  // XOR combos
   if (session.header) {
     const dh = b64dec(session.header);
     if (dh) for (const c of cv) push(xorTokens(dh, c.v), 'xor(b64hdr,' + c.tag + ')');
@@ -451,21 +457,20 @@ function probe(pin, token, sh, timeout) {
     ws.onclose = e => fin(false, (opened ? 'closed after upgrade ' : 'closed before upgrade ') + e.code + (e.reason ? ' "' + e.reason + '"' : ''));
   });
 }
-
-async function wsTest() {
-  log('frame origin=' + (location.origin || 'null') + ' proto=' + location.protocol + ' WebSocket=' + (typeof WebSocket), 'inf');
-  for (const u of ['wss://ws.postman-echo.com/raw', 'wss://ws.ifelse.io']) {
-    const r = await probe('1', 'x', { scheme: u.split('://')[0], host: u.split('://')[1].split('/')[0], mode: 'raw' }, 6000);
-    if (r.opened || r.why.indexOf('closed') >= 0) {
-      log('echo ' + u.replace(/^wss:\/\//, '') + ' → ' + (r.opened ? 'OPEN OK' : r.why), r.opened ? 'ok' : 'warn');
-      if (r.opened) { pill('#pFrame', 'sockets ok', 'ok'); return; }
+async function wsTest(){
+  log('frame origin='+(location.origin||'null')+' proto='+location.protocol+' WebSocket='+(typeof WebSocket),'inf');
+  for(const u of ['wss://ws.postman-echo.com/raw','wss://ws.ifelse.io']){
+    const r=await probe('1','x',{scheme:u.split('://')[0],host:u.split('://')[1].split('/')[0],mode:'raw'},6000);
+    if(r.opened||r.why.indexOf('closed')>=0){
+      log('echo '+u.replace(/^wss:\/\//,'')+' → '+(r.opened?'OPEN OK':r.why),r.opened?'ok':'warn');
+      if(r.opened){ pill('#pFrame','sockets ok','ok'); return; }
     }
   }
-  pill('#pFrame', 'sockets blocked', 'bad');
-  banner('Sockets are blocked in this frame. Host the file and embed by URL.', 'bad');
+  pill('#pFrame','sockets blocked','bad');
+  banner('Sockets are blocked in this frame. Host the file and embed by URL.','bad');
 }
 
-/* ===================== resolver (uses worker) ===================== */
+/* ===================== resolver ===================== */
 let RESOLVING = false, LOCKED = null;
 async function resolveToken(pin, manual) {
   if (RESOLVING) throw new Error('resolver busy');
@@ -506,323 +511,368 @@ async function resolveToken(pin, manual) {
   } finally { RESOLVING = false; }
 }
 
-/* ===================== player ===================== */
+/* ===================== Player (fixed login + player list) ===================== */
 let players = [], solo = null, armOn = false;
 const ICON = ['▲', '◆', '●', '■'];
-class Player {
-  constructor(pin, name, token, on) {
-    this.pin = pin; this.name = name; this.token = token; this.on = on || {};
-    this.n = 1; this.clientId = null; this.joined = false; this.dead = false;
-    this.qid = null; this.qnum = 0; this.answers = null; this.answered = false;
+let playerList = []; // live roster from server
+
+function updatePlayerUI() {
+  const box = $('#playerList');
+  if (!box) return;
+  if (!playerList.length) {
+    box.innerHTML = '<div class="player-item" style="color:var(--label2)">No players yet</div>';
+    return;
   }
-  id() { return String(this.n++); }
-  send(o) { if (this.ws && this.ws.readyState === 1) { o.clientId = this.clientId; this.ws.send(JSON.stringify([o])); } }
-  connect() {
-    return new Promise((res, rej) => {
-      const url = wsUrl(this.pin, this.token);
+  box.innerHTML = playerList.map(p => `
+    <div class="player-item">
+      <span class="name">${p.name.replace(/</g,'&lt;')}</span>
+      <button class="kick-btn" data-name="${p.name.replace(/'/g,'&#39;')}">Kick</button>
+    </div>
+  `).join('');
+  // add kick handlers
+  $$('.kick-btn').forEach(b => b.onclick = () => kickPlayer(b.dataset.name));
+}
+
+function kickPlayer(name) {
+  if (!solo || !solo.ws || solo.ws.readyState !== 1) {
+    log('you need to be in the game first', 'err');
+    return;
+  }
+  // Send a kick message for that specific name
+  // Kahoot kick: /service/controller with data { type:'kick', name: name }
+  solo.send({channel:'/service/controller',id:solo.id(),data:{type:'kick',name:name}});
+  log('kicked ' + name, 'ok');
+}
+
+class Player {
+  constructor(pin,name,token,on){
+    this.pin=pin; this.name=name; this.token=token; this.on=on||{};
+    this.n=1; this.clientId=null; this.joined=false; this.dead=false;
+    this.qid=null; this.qnum=0; this.answers=null; this.answered=false;
+  }
+  id(){ return String(this.n++); }
+  send(o){ if(this.ws&&this.ws.readyState===1){ o.clientId=this.clientId; this.ws.send(JSON.stringify([o])); } }
+  connect(){
+    return new Promise((res,rej)=>{
+      const url=wsUrl(this.pin,this.token);
       let ws;
-      try { ws = new WebSocket(url); } catch (e) { return rej(new Error('ctor ' + (e && e.message))); }
-      this.ws = ws;
-      const tm = setTimeout(() => rej(new Error('ws timeout')), 15000);
-      ws.onopen = () => this.send({ channel: '/meta/handshake', version: '1.0', minimumVersion: '1.0',
-        supportedConnectionTypes: ['websocket', 'long-polling'], advice: { timeout: 60000, interval: 0 },
-        ext: { ack: true, timesync: true }, id: this.id() });
-      ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
-        (Array.isArray(m) ? m : [m]).forEach(x => this.handle(x, res, rej, tm)); };
-      ws.onerror = () => {};
-      ws.onclose = () => { this.dead = true; this.on.close && this.on.close(this); };
+      try{ ws=new WebSocket(url); }catch(e){ return rej(new Error('ctor '+(e&&e.message))); }
+      this.ws=ws;
+      const tm=setTimeout(()=>rej(new Error('ws timeout')),15000);
+      ws.onopen=()=>{
+        // Essential: handshake
+        this.send({channel:'/meta/handshake',version:'1.0',minimumVersion:'1.0',
+          supportedConnectionTypes:['websocket','long-polling'],advice:{timeout:60000,interval:0},
+          ext:{ack:true,timesync:true},id:this.id()});
+      };
+      ws.onmessage=ev=>{ let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+        (Array.isArray(m)?m:[m]).forEach(x=>this.handle(x,res,rej,tm)); };
+      ws.onerror=()=>{};
+      ws.onclose=()=>{ this.dead=true; this.on.close&&this.on.close(this); };
     });
   }
-  handle(m, res, rej, tm) {
-    if (!m) return;
-    if (m.channel === '/meta/handshake') {
-      if (!m.successful) { clearTimeout(tm); return rej(new Error('handshake: ' + (m.error || '?'))); }
-      this.clientId = m.clientId;
-      this.send({ channel: '/meta/subscribe', subscription: '/service/controller', id: this.id() });
-      this.send({ channel: '/meta/subscribe', subscription: '/service/player', id: this.id() });
-      this.send({ channel: '/meta/connect', connectionType: 'websocket', id: this.id() });
-      this.send({ channel: '/service/controller', id: this.id(), data: {
-        type: 'login', gameid: this.pin, host: 'kahoot.it', name: this.name,
-        content: JSON.stringify({ device: { userAgent: navigator.userAgent, screen: { width: 1920, height: 1080 } }, userAgent: navigator.userAgent })
-      }});
+  handle(m,res,rej,tm){
+    if(!m) return;
+    if(m.channel==='/meta/handshake'){
+      if(!m.successful){ clearTimeout(tm); return rej(new Error('handshake: '+(m.error||'?'))); }
+      this.clientId=m.clientId;
+      this.send({channel:'/meta/subscribe',subscription:'/service/controller',id:this.id()});
+      this.send({channel:'/meta/subscribe',subscription:'/service/player',id:this.id()});
+      this.send({channel:'/meta/connect',connectionType:'websocket',id:this.id()});
+      // ---- SIMPLIFIED LOGIN (no content) ----
+      this.send({channel:'/service/controller',id:this.id(),data:{
+        type:'login',gameid:this.pin,host:'kahoot.it',name:this.name}});
       clearTimeout(tm); res(this); return;
     }
-    if (m.channel === '/meta/connect' && m.successful) {
-      setTimeout(() => { if (!this.dead) this.send({ channel: '/meta/connect', connectionType: 'websocket', id: this.id() }); }, 200);
+    if(m.channel==='/meta/connect'&&m.successful){
+      setTimeout(()=>{ if(!this.dead) this.send({channel:'/meta/connect',connectionType:'websocket',id:this.id()}); },200);
       return;
     }
-    if (m.channel === '/meta/subscribe' || m.channel === '/meta/disconnect') return;
-    const d = m.data || {};
-    let c = d.content;
-    if (typeof c === 'string') { try { c = JSON.parse(c); } catch (e) { c = null; } }
-    if (d.type === 'login_response') {
-      if (d.error) this.on.fail && this.on.fail(this, d.error);
-      else { this.joined = true; this.on.join && this.on.join(this, d); }
+    if(m.channel==='/meta/subscribe'||m.channel==='/meta/disconnect') return;
+    const d=m.data||{};
+    let c=d.content;
+    if(typeof c==='string'){ try{ c=JSON.parse(c); }catch(e){ c=null; } }
+
+    // ---- Handle login_response (join/fail) ----
+    if(d.type==='login_response'){
+      if(d.error) this.on.fail&&this.on.fail(this,d.error);
+      else { this.joined=true; this.on.join&&this.on.join(this,d); }
       return;
     }
-    if (d.type === 'question_start') {
-      this.qid = d.id; this.qnum = (c && c.questionIndex) || 0;
-      this.answers = c && c.quizQuestionAnswers; this.answered = false;
-      this.on.question && this.on.question(this, c, d);
-      if ($('#auto').checked && Math.random() * 100 <= +$('#acc').value)
-        setTimeout(() => this.autoAnswer(), +$('#delay').value);
+
+    // ---- Handle playerlist_update (for roster) ----
+    if (d.type === 'playerlist_update') {
+      const list = c && c.players;
+      if (list) {
+        playerList = list.map(p => ({ name: p.name }));
+        updatePlayerUI();
+      }
       return;
     }
-    if (d.type === 'answer_reveal' || d.type === 'question_end' || d.type === 'game_over' || d.type === 'quiz_end')
-      this.on.event && this.on.event(this, d.type, c);
+
+    if(d.type==='question_start'){
+      this.qid=d.id; this.qnum=(c&&c.questionIndex)||0;
+      this.answers=c&&c.quizQuestionAnswers; this.answered=false;
+      this.on.question&&this.on.question(this,c,d);
+      if($('#auto').checked && Math.random()*100<=+$('#acc').value)
+        setTimeout(()=>this.autoAnswer(),+$('#delay').value);
+      return;
+    }
+    if(d.type==='answer_reveal'||d.type==='question_end'||d.type==='game_over'||d.type==='quiz_end')
+      this.on.event&&this.on.event(this,d.type,c);
   }
-  autoAnswer() {
-    if (this.answered || !this.qid) return;
-    let i = 0;
-    if (this.answers && this.answers.length) { let b = -1; this.answers.forEach((v, n) => { if (v > b) { b = v; i = n; } }); }
-    else i = Math.floor(Math.random() * 4);
+  autoAnswer(){
+    if(this.answered||!this.qid) return;
+    let i=0;
+    if(this.answers&&this.answers.length){ let b=-1; this.answers.forEach((v,n)=>{ if(v>b){b=v;i=n;} }); }
+    else i=Math.floor(Math.random()*4);
     this.answer(i);
   }
-  answer(i) {
-    if (!this.qid || this.answered) return;
-    this.answered = true;
-    this.send({ channel: '/service/controller', id: this.id(), data: { type: 'message', gameid: this.pin, host: 'kahoot.it', id: this.qid,
-      content: JSON.stringify({ type: 'quiz', choice: i, questionIndex: this.qnum,
-        meta: { lag: 10, device: { userAgent: navigator.userAgent, screen: { width: 1920, height: 1080 } } } })
-    }});
-    this.on.answer && this.on.answer(this, i);
+  answer(i){
+    if(!this.qid||this.answered) return;
+    this.answered=true;
+    this.send({channel:'/service/controller',id:this.id(),data:{type:'message',gameid:this.pin,host:'kahoot.it',id:this.qid,
+      content:JSON.stringify({type:'quiz',choice:i,questionIndex:this.qnum,
+        meta:{lag:10,device:{userAgent:navigator.userAgent,screen:{width:1920,height:1080}}}})}});
+    this.on.answer&&this.on.answer(this,i);
   }
-  blast(text) {
-    this.send({ channel: '/service/controller', id: this.id(), data: { type: 'message', gameid: this.pin, host: 'kahoot.it', id: this.qid || 1,
-      content: JSON.stringify({ type: 'message', message: text })
-    }});
+  blast(text){
+    this.send({channel:'/service/controller',id:this.id(),data:{type:'message',gameid:this.pin,host:'kahoot.it',id:this.qid||1,
+      content:JSON.stringify({type:'message',message:text})}});
   }
-  raw(channel, data) { this.send({ channel, id: this.id(), data }); }
-  close() { this.dead = true; try { this.ws.close(); } catch (e) {} }
+  raw(channel,data){ this.send({channel,id:this.id(),data}); }
+  close(){ this.dead=true; try{ this.ws.close(); }catch(e){} }
 }
 
-/* ===================== live view ===================== */
-function renderQuestion(c) {
-  if (!c) return;
-  $('#qIdx').textContent = (c.questionIndex ?? 0) + 1;
-  $('#qText').textContent = c.question || '';
-  const box = $('#answers'); box.innerHTML = '';
-  (c.answers || []).forEach((a, i) => {
-    const b = document.createElement('div');
-    b.className = 'ans g' + i;
-    b.innerHTML = '<span class="sh">' + ICON[i] + '</span><span>' + (i + 1) + '. ' + String(a.answer || '').replace(/</g, '&lt;') + '</span>';
-    b.onclick = () => { players.forEach(p => { p.answered = false; p.answer(i); }); b.classList.add('hit'); };
+/* ===================== live view (unchanged) ===================== */
+function renderQuestion(c){
+  if(!c) return;
+  $('#qIdx').textContent=(c.questionIndex??0)+1;
+  $('#qText').textContent=c.question||'';
+  const box=$('#answers'); box.innerHTML='';
+  (c.answers||[]).forEach((a,i)=>{
+    const b=document.createElement('div');
+    b.className='ans g'+i;
+    b.innerHTML='<span class="sh">'+ICON[i]+'</span><span>'+(i+1)+'. '+String(a.answer||'').replace(/</g,'&lt;')+'</span>';
+    b.onclick=()=>{ players.forEach(p=>{ p.answered=false; p.answer(i); }); b.classList.add('hit'); };
     box.appendChild(b);
   });
-  const k = (c.answers || []).findIndex(a => a.correct);
-  if (k >= 0 && !$('#auto').checked && box.children[k]) box.children[k].classList.add('hit');
-  if ($('#tts').checked && c.question) { try { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(c.question)); } catch (e) {} }
-  beep(880, 0.12);
-  const secs = c.time || 20, started = Date.now();
+  const k=(c.answers||[]).findIndex(a=>a.correct);
+  if(k>=0&&!$('#auto').checked&&box.children[k]) box.children[k].classList.add('hit');
+  if($('#tts').checked&&c.question){ try{ speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(c.question)); }catch(e){} }
+  beep(880,0.12);
+  const secs=c.time||20, started=Date.now();
   clearInterval(renderQuestion._t);
-  renderQuestion._t = setInterval(() => {
-    const left = secs - (Date.now() - started) / 1000;
-    $('#qTime').textContent = left > 0 ? left.toFixed(1) + 's' : '–';
-    $('#qBar').style.width = Math.max(0, Math.min(100, left / secs * 100)) + '%';
-    if (left <= 0) clearInterval(renderQuestion._t);
-  }, 100);
+  renderQuestion._t=setInterval(()=>{
+    const left=secs-(Date.now()-started)/1000;
+    $('#qTime').textContent=left>0?left.toFixed(1)+'s':'–';
+    $('#qBar').style.width=Math.max(0,Math.min(100,left/secs*100))+'%';
+    if(left<=0) clearInterval(renderQuestion._t);
+  },100);
 }
-function revealCorrect(ch) {
-  Array.from($('#answers').children).forEach((b, i) => {
-    if (ch && ch.indexOf(i) >= 0) b.classList.add('hit'); else if (ch) b.classList.add('miss');
+function revealCorrect(ch){
+  Array.from($('#answers').children).forEach((b,i)=>{
+    if(ch&&ch.indexOf(i)>=0) b.classList.add('hit'); else if(ch) b.classList.add('miss');
   });
-  beep(1180, 0.1);
+  beep(1180,0.1);
 }
 
-/* ===================== wiring ===================== */
-const pinOk = p => /^\d{5,9}$/.test(p);
-const pinVal = () => $('#pin').value.trim();
-function tick() { const n = players.filter(p => p.ws && p.ws.readyState === 1).length; pill('#pSock', n + ' sockets', n ? 'ok' : ''); }
-setInterval(tick, 600);
+/* ===================== wiring (unchanged except soloOpts) ===================== */
+const pinOk=p=>/^\d{5,9}$/.test(p);
+const pinVal=()=>$('#pin').value.trim();
+function tick(){ const n=players.filter(p=>p.ws&&p.ws.readyState===1).length; pill('#pSock',n+' sockets',n?'ok':''); }
+setInterval(tick,600);
 
-$('#pin').addEventListener('input', () => { $('#pin').value = $('#pin').value.replace(/\D/g, ''); S.set('pin', $('#pin').value); });
-$('#nick').addEventListener('input', () => S.set('nick', $('#nick').value));
-$('#pin').value = S.get('pin', '');
-$('#nick').value = S.get('nick', 'venice');
-$('#count').value = S.get('count', '20');
-$('#cntv').textContent = $('#count').value; $('#cntv2').textContent = $('#count').value;
-$('#count').addEventListener('input', () => { $('#cntv').textContent = $('#count').value; $('#cntv2').textContent = $('#count').value; S.set('count', $('#count').value); });
-$$('[data-step]').forEach(b => b.onclick = () => {
-  const v = Math.max(1, Math.min(120, (+$('#count').value) + (+b.dataset.step)));
-  $('#count').value = v; $('#count').dispatchEvent(new Event('input'));
+$('#pin').addEventListener('input',()=>{ $('#pin').value=$('#pin').value.replace(/\D/g,''); S.set('pin',$('#pin').value); });
+$('#nick').addEventListener('input',()=>S.set('nick',$('#nick').value));
+$('#pin').value=S.get('pin','');
+$('#nick').value=S.get('nick','venice');
+$('#count').value=S.get('count','20');
+$('#cntv').textContent=$('#count').value; $('#cntv2').textContent=$('#count').value;
+$('#count').addEventListener('input',()=>{ $('#cntv').textContent=$('#count').value; $('#cntv2').textContent=$('#count').value; S.set('count',$('#count').value); });
+$$('[data-step]').forEach(b=>b.onclick=()=>{
+  const v=Math.max(1,Math.min(120,(+$('#count').value)+(+b.dataset.step)));
+  $('#count').value=v; $('#count').dispatchEvent(new Event('input'));
 });
-const savedEp = S.get('ep', '');
-if (savedEp) { const [sc, h, m] = savedEp.split('|'); if (sc && h && m) { EP = { scheme: sc, host: h, mode: m }; pill('#pEp', sc + '://' + h + ' ' + m, 'ok'); } }
-$('#acc').addEventListener('input', () => $('#accv').textContent = $('#acc').value + '%');
-$('#delay').addEventListener('input', () => $('#dlv').textContent = $('#delay').value + ' ms');
+const savedEp=S.get('ep','');
+if(savedEp){ const [sc,h,m]=savedEp.split('|'); if(sc&&h&&m){ EP={scheme:sc,host:h,mode:m}; pill('#pEp',sc+'://'+h+' '+m,'ok'); } }
+$('#acc').addEventListener('input',()=>$('#accv').textContent=$('#acc').value+'%');
+$('#delay').addEventListener('input',()=>$('#dlv').textContent=$('#delay').value+' ms');
 
-function soloOpts() {
+function soloOpts(){
   return {
-    join: pl => { log('JOINED as "' + pl.name + '"', 'ok'); pill('#pTok', 'in game', 'ok'); banner('You are in as ' + pl.name + '.', 'ok'); beep(660, 0.12); },
-    fail: (pl, e) => log('login rejected: ' + e, 'err'),
-    question: (pl, c) => {
+    join:pl=>{ log('JOINED as "'+pl.name+'"','ok'); pill('#pTok','in game','ok'); banner('You are in as '+pl.name+'.','ok'); beep(660,0.12); },
+    fail:(pl,e)=>log('login rejected: '+e,'err'),
+    question:(pl,c)=>{
       renderQuestion(c);
-      const a = (c && c.quizQuestionAnswers) || [];
-      let k = 0; a.forEach((v, n) => { if (v > a[k]) k = n; });
-      log('Q' + ((c.questionIndex || 0) + 1) + ' correct=' + 'ABCD'[k] + ' ' + JSON.stringify(a), 'mag');
+      const a=(c&&c.quizQuestionAnswers)||[];
+      let k=0; a.forEach((v,n)=>{ if(v>a[k]) k=n; });
+      log('Q'+((c.questionIndex||0)+1)+' correct='+'ABCD'[k]+' '+JSON.stringify(a),'mag');
     },
-    event: (pl, t, c) => {
-      if (t === 'answer_reveal' && c) revealCorrect(c.correctChoices);
-      if (t === 'game_over') { log('game over', 'ok'); banner('Game over.', 'ok'); }
-      if (t === 'question_end') clearInterval(renderQuestion._t);
+    event:(pl,t,c)=>{
+      if(t==='answer_reveal'&&c) revealCorrect(c.correctChoices);
+      if(t==='game_over'){ log('game over','ok'); banner('Game over.','ok'); }
+      if(t==='question_end') clearInterval(renderQuestion._t);
     },
-    answer: (pl, i) => { if (pl === solo) log('answered ' + 'ABCD'[i], 'inf'); },
-    close: () => {}
+    answer:(pl,i)=>{ if(pl===solo) log('answered '+'ABCD'[i],'inf'); },
+    close:()=>{}
   };
 }
-async function armJoin() {
-  const p = pinVal();
-  if (!pinOk(p)) return banner('Enter a 5-9 digit game PIN first.', 'warn');
-  stopAll(); armOn = true;
-  banner('Connecting… retries by itself until the game is live.', 'warn');
-  pill('#pTok', 'arming', 'warn');
-  let tries = 0;
-  while (armOn) {
-    try {
-      const tk = await resolveToken(p, $('#tok').value.trim() || null);
-      if (!armOn) return;
-      solo = new Player(p, $('#nick').value.trim() || 'venice', tk, soloOpts());
+async function armJoin(){
+  const p=pinVal();
+  if(!pinOk(p)) return banner('Enter a 5-9 digit game PIN first.','warn');
+  stopAll(); armOn=true;
+  banner('Connecting… retries by itself until the game is live.','warn');
+  pill('#pTok','arming','warn');
+  let tries=0;
+  while(armOn){
+    try{
+      const tk=await resolveToken(p,$('#tok').value.trim()||null);
+      if(!armOn) return;
+      solo=new Player(p,$('#nick').value.trim()||'venice',tk,soloOpts());
       players.push(solo);
       await solo.connect();
-      solo.on.close = () => { if (!solo.dead && armOn) { log('socket dropped — reconnecting', 'warn'); armJoin(); } };
+      solo.on.close=()=>{ if(!solo.dead&&armOn){ log('socket dropped — reconnecting','warn'); armJoin(); } };
       return;
-    } catch (e) {
+    }catch(e){
       tries++;
-      log('attempt ' + tries + ': ' + e.message, 'warn');
-      if (tries >= 3) {
-        banner('Connection failed after 3 attempts. Try a manual token or different PIN.', 'bad');
+      log('attempt '+tries+': '+e.message,'warn');
+      if(tries>=3){
+        banner('Connection failed after 3 attempts. Try a manual token or different PIN.','bad');
         return;
       }
-      banner('Not in yet — retrying in 3s…', 'warn');
+      banner('Not in yet — retrying in 3s…','warn');
       await sleep(3000);
     }
   }
 }
-$('#join').onclick = armJoin;
+$('#join').onclick=armJoin;
 
-async function swarm() {
-  const p = pinVal();
-  if (!pinOk(p)) return banner('Enter a PIN first.', 'warn');
-  stopAll(); armOn = false;
-  const n = Math.max(1, Math.min(120, +$('#count').value));
-  const base = ($('#nick').value.trim() || 'bot').slice(0, 10);
-  pill('#pTok', 'arming', 'warn');
+async function swarm(){
+  const p=pinVal();
+  if(!pinOk(p)) return banner('Enter a PIN first.','warn');
+  stopAll(); armOn=false;
+  const n=Math.max(1,Math.min(120,+$('#count').value));
+  const base=($('#nick').value.trim()||'bot').slice(0,10);
+  pill('#pTok','arming','warn');
   let tk;
-  try { tk = await resolveToken(p, $('#tok').value.trim() || null); }
-  catch (e) { banner('Swarm aborted: ' + e.message, 'bad'); return log('swarm aborted: ' + e.message, 'err'); }
-  banner('Spawning ' + n + ' bots…', 'warn');
-  let ok = 0, bad = 0; const jobs = [];
-  for (let i = 0; i < n; i++) {
+  try{ tk=await resolveToken(p,$('#tok').value.trim()||null); }
+  catch(e){ banner('Swarm aborted: '+e.message,'bad'); return log('swarm aborted: '+e.message,'err'); }
+  banner('Spawning '+n+' bots…','warn');
+  let ok=0,bad=0; const jobs=[];
+  for(let i=0;i<n;i++){
     await sleep(15);
-    const name = $('#uniq').checked ? base + i : base;
-    const pl = new Player(p, name, tk, {
-      join: () => { ok++; tick(); if (ok % 10 === 0) log('bots in ' + ok + '/' + n, 'ok'); },
-      fail: (x, e) => log('bot rejected: ' + e, 'warn')
+    const name=$('#uniq').checked?base+i:base;
+    const pl=new Player(p,name,tk,{
+      join:()=>{ ok++; tick(); if(ok%10===0) log('bots in '+ok+'/'+n,'ok'); },
+      fail:(x,e)=>log('bot rejected: '+e,'warn')
     });
     players.push(pl);
-    jobs.push(pl.connect().catch(e => { bad++; if (bad <= 3) log('bot fail: ' + e.message, 'err'); }));
+    jobs.push(pl.connect().catch(e=>{ bad++; if(bad<=3) log('bot fail: '+e.message,'err'); }));
   }
   await Promise.all(jobs);
-  log('swarm done — ' + ok + ' in, ' + bad + ' failed', ok ? 'ok' : 'err');
-  banner(ok ? ok + ' bots are in the game.' : 'No bots joined.', ok ? 'ok' : 'bad');
+  log('swarm done — '+ok+' in, '+bad+' failed',ok?'ok':'err');
+  banner(ok?ok+' bots are in the game.':'No bots joined.',ok?'ok':'bad');
 }
-$('#swarm').onclick = swarm; $('#swarm2').onclick = swarm;
+$('#swarm').onclick=swarm; $('#swarm2').onclick=swarm;
 
-async function boot(times) {
-  const p = pinVal();
-  if (!pinOk(p)) return banner('Enter a PIN first.', 'warn');
-  const name = ($('#target').value.trim() || $('#nick').value.trim() || 'venice').slice(0, 15);
-  let tk = LOCKED;
-  if (!tk) { try { tk = await resolveToken(p, $('#tok').value.trim() || null); } catch (e) { return log('boot aborted: ' + e.message, 'err'); } }
-  log('booting "' + name + '" ×' + times, 'inf');
-  for (let i = 0; i < times; i++) {
-    const pl = new Player(p, name, tk, {
-      join: () => { log('booted as ' + name, 'ok'); tick(); },
-      fail: (x, e) => log('boot rejected: ' + e, 'warn')
+async function boot(times){
+  const p=pinVal();
+  if(!pinOk(p)) return banner('Enter a PIN first.','warn');
+  const name=($('#target').value.trim()||$('#nick').value.trim()||'venice').slice(0,15);
+  let tk=LOCKED;
+  if(!tk){ try{ tk=await resolveToken(p,$('#tok').value.trim()||null); }catch(e){ return log('boot aborted: '+e.message,'err'); } }
+  log('booting "'+name+'" ×'+times,'inf');
+  for(let i=0;i<times;i++){
+    const pl=new Player(p,name,tk,{
+      join:()=>{ log('booted as '+name,'ok'); tick(); },
+      fail:(x,e)=>log('boot rejected: '+e,'warn')
     });
     players.push(pl);
-    pl.connect().catch(e => log('boot fail: ' + e.message, 'err'));
+    pl.connect().catch(e=>log('boot fail: '+e.message,'err'));
     await sleep(150);
   }
-  banner('Booted ' + name + ' ×' + times + '.', 'ok');
+  banner('Booted '+name+' ×'+times+'.','ok');
 }
-$('#boot1').onclick = () => boot(1);
-$('#boot5').onclick = () => boot(5);
-$('#boot20').onclick = () => boot(20);
+$('#boot1').onclick=()=>boot(1);
+$('#boot5').onclick=()=>boot(5);
+$('#boot20').onclick=()=>boot(20);
 
-$('#rejoin').onclick = () => {
-  const dead = players.filter(p => !p.joined);
-  dead.forEach(p => { p.dead = false; p.connect().catch(() => {}); });
-  log('rejoining ' + dead.length, 'inf');
+$('#rejoin').onclick=()=>{
+  const dead=players.filter(p=>!p.joined);
+  dead.forEach(p=>{ p.dead=false; p.connect().catch(()=>{}); });
+  log('rejoining '+dead.length,'inf');
 };
-function stopAll() {
-  armOn = false;
-  players.forEach(p => p.close());
-  players = []; solo = null;
+function stopAll(){
+  armOn=false;
+  players.forEach(p=>p.close());
+  players=[]; solo=null;
   clearInterval(renderQuestion._t);
-  $('#qText').textContent = 'waiting for a game…';
-  $('#qIdx').textContent = '–'; $('#qTime').textContent = '–'; $('#qBar').style.width = '0';
-  $('#answers').innerHTML = '';
-  tick(); pill('#pTok', 'token idle'); log('stopped', 'warn');
+  $('#qText').textContent='waiting for a game…';
+  $('#qIdx').textContent='–'; $('#qTime').textContent='–'; $('#qBar').style.width='0';
+  $('#answers').innerHTML='';
+  playerList = [];
+  updatePlayerUI();
+  tick(); pill('#pTok','token idle'); log('stopped','warn');
 }
-$('#stop').onclick = () => { stopAll(); banner(''); };
-$('#fc').onclick = () => players.forEach(p => { p.answered = false; p.autoAnswer(); });
-$('#fr').onclick = () => players.forEach(p => { p.answered = false; p.answer(Math.floor(Math.random() * 4)); });
+$('#stop').onclick=()=>{ stopAll(); banner(''); };
+$('#fc').onclick=()=>players.forEach(p=>{ p.answered=false; p.autoAnswer(); });
+$('#fr').onclick=()=>players.forEach(p=>{ p.answered=false; p.answer(Math.floor(Math.random()*4)); });
 
-function doBlast(t) { if (!t) return; players.forEach(p => p.blast(t)); log('blast → "' + t + '" ×' + players.length, 'mag'); }
-$('#blastGo').onclick = () => doBlast($('#blast').value.trim());
-$('#blast5').onclick = async () => { for (let i = 0; i < 5; i++) { doBlast($('#blast').value.trim()); await sleep(220); } };
-$('#blast20').onclick = async () => { for (let i = 0; i < 20; i++) { doBlast($('#blast').value.trim()); await sleep(150); } };
-$$('[data-b]').forEach(b => b.onclick = () => doBlast(b.dataset.b));
-$('#chaos').onclick = async () => {
-  const t = $('#blast').value.trim() || 'venice was here';
-  beep(440, 0.2, 'square');
-  if (!$('#ytw').innerHTML) $('#ytPlay').click();
-  for (let i = 0; i < 8; i++) { doBlast(t); await sleep(170); }
-  players.forEach(p => { p.answered = false; p.answer(Math.floor(Math.random() * 4)); });
-  banner('Chaos deployed.', 'ok'); log('chaos', 'mag');
+function doBlast(t){ if(!t) return; players.forEach(p=>p.blast(t)); log('blast → "'+t+'" ×'+players.length,'mag'); }
+$('#blastGo').onclick=()=>doBlast($('#blast').value.trim());
+$('#blast5').onclick=async()=>{ for(let i=0;i<5;i++){ doBlast($('#blast').value.trim()); await sleep(220); } };
+$('#blast20').onclick=async()=>{ for(let i=0;i<20;i++){ doBlast($('#blast').value.trim()); await sleep(150); } };
+$$('[data-b]').forEach(b=>b.onclick=()=>doBlast(b.dataset.b));
+$('#chaos').onclick=async()=>{
+  const t=$('#blast').value.trim()||'venice was here';
+  beep(440,0.2,'square');
+  if(!$('#ytw').innerHTML) $('#ytPlay').click();
+  for(let i=0;i<8;i++){ doBlast(t); await sleep(170); }
+  players.forEach(p=>{ p.answered=false; p.answer(Math.floor(Math.random()*4)); });
+  banner('Chaos deployed.','ok'); log('chaos','mag');
 };
-function ytId(s) {
-  s = String(s || '').trim();
-  const m = s.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/);
-  return m ? m[1] : (/^[A-Za-z0-9_-]{6,}$/.test(s) ? s : null);
+function ytId(s){
+  s=String(s||'').trim();
+  const m=s.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/);
+  return m?m[1]:(/^[A-Za-z0-9_-]{6,}$/.test(s)?s:null);
 }
-$('#ytPlay').onclick = () => {
-  const id = ytId($('#yt').value); if (!id) return log('bad youtube id', 'warn');
-  const w = $('#ytw'); w.innerHTML = '';
-  const f = document.createElement('iframe');
-  f.setAttribute('allow', 'autoplay; encrypted-media'); f.setAttribute('allowfullscreen', '');
-  f.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&controls=0&rel=0' + ($('#ytLoop').checked ? '&loop=1&playlist=' + id : '');
-  w.appendChild(f); log('youtube ' + id, 'ok');
+$('#ytPlay').onclick=()=>{
+  const id=ytId($('#yt').value); if(!id) return log('bad youtube id','warn');
+  const w=$('#ytw'); w.innerHTML='';
+  const f=document.createElement('iframe');
+  f.setAttribute('allow','autoplay; encrypted-media'); f.setAttribute('allowfullscreen','');
+  f.src='https://www.youtube.com/embed/'+id+'?autoplay=1&controls=0&rel=0'+($('#ytLoop').checked?'&loop=1&playlist='+id:'');
+  w.appendChild(f); log('youtube '+id,'ok');
 };
-$('#ytStop').onclick = () => { $('#ytw').innerHTML = ''; };
-$('#rgo').onclick = () => {
-  let data; try { data = JSON.parse($('#rdata').value); } catch (e) { return log('raw bad json: ' + e.message, 'err'); }
-  players.forEach(p => p.raw($('#rchan').value, data));
-  log('published raw ×' + players.length, 'mag');
+$('#ytStop').onclick=()=>{ $('#ytw').innerHTML=''; };
+$('#rgo').onclick=()=>{
+  let data; try{ data=JSON.parse($('#rdata').value); }catch(e){ return log('raw bad json: '+e.message,'err'); }
+  players.forEach(p=>p.raw($('#rchan').value,data));
+  log('published raw ×'+players.length,'mag');
 };
-$('#wstest').onclick = wsTest;
-$('#diag').onclick = async () => {
-  const p = pinVal();
-  if (!pinOk(p)) return banner('Enter a PIN first.', 'warn');
-  banner('Diagnosing…', 'warn');
-  try { const tk = await resolveToken(p, $('#tok').value.trim() || null); banner('Link works — token accepted on ' + EP.host + '.', 'ok'); }
-  catch (e) { banner('Diagnose: ' + e.message, 'bad'); log('DIAGNOSE: ' + e.message, 'err'); }
+$('#wstest').onclick=wsTest;
+$('#diag').onclick=async()=>{
+  const p=pinVal();
+  if(!pinOk(p)) return banner('Enter a PIN first.','warn');
+  banner('Diagnosing…','warn');
+  try{ const tk=await resolveToken(p,$('#tok').value.trim()||null); banner('Link works — token accepted on '+EP.host+'.','ok'); }
+  catch(e){ banner('Diagnose: '+e.message,'bad'); log('DIAGNOSE: '+e.message,'err'); }
 };
-$('#tokClear').onclick = () => { $('#tok').value = ''; $('#tokView').textContent = ''; log('token box cleared', 'warn'); };
-$('#epClear').onclick = () => { S.del('ep'); EP = { scheme: 'wss', host: 'kahoot.it', mode: 'enc' }; pill('#pEp', 'endpoint reset', 'warn'); };
-$('#copy').onclick = () => {
-  const pr = (navigator.clipboard && navigator.clipboard.writeText(logEl.innerText)) || Promise.reject();
-  pr.then(() => log('copied', 'ok')).catch(() => log('clipboard blocked', 'warn'));
+$('#tokClear').onclick=()=>{ $('#tok').value=''; $('#tokView').textContent=''; log('token box cleared','warn'); };
+$('#epClear').onclick=()=>{ S.del('ep'); EP={scheme:'wss',host:'kahoot.it',mode:'enc'}; pill('#pEp','endpoint reset','warn'); };
+$('#copy').onclick=()=>{
+  const pr=(navigator.clipboard&&navigator.clipboard.writeText(logEl.innerText))||Promise.reject();
+  pr.then(()=>log('copied','ok')).catch(()=>log('clipboard blocked','warn'));
 };
-$('#clr').onclick = () => { logEl.innerHTML = ''; };
-$$('.tabbar button').forEach(b => b.onclick = () => {
-  $$('.tabbar button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
-  $$('.page').forEach(p => p.classList.toggle('on', p.id === 'page-' + b.dataset.tab));
+$('#clr').onclick=()=>{ logEl.innerHTML=''; };
+$$('.tabbar button').forEach(b=>b.onclick=()=>{
+  $$('.tabbar button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
+  $$('.page').forEach(p=>p.classList.toggle('on',p.id==='page-'+b.dataset.tab));
 });
 
-log('ready. type a PIN, tap Join.', 'ok');
-pill('#pTok', 'token idle');
+log('ready. type a PIN, tap Join.','ok');
+pill('#pTok','token idle');
 wsTest();
 </script>
 </body>
